@@ -1,75 +1,25 @@
 {% extends "base.html" %} {# 定义图标渲染宏 #} {% macro
 render_icon(icon_name='folder', color='#3498db') %} {% if
 icon_name.startswith('fa ') or icon_name.startswith('fas ') %}
-<i
-  class="{{ icon_name }}"
-  {%
-  if
-  color
-  %}style="color: {{ color }}"
-  {%
-  endif
-  %}
-></i>
+<i class="{{ icon_name }}" {% if color %}style="color: {{ color }}" {% endif %}></i>
 {% else %}
-<i
-  class="bi bi-{{ icon_name }}"
-  {%
-  if
-  color
-  %}style="color: {{ color }}"
-  {%
-  endif
-  %}
-></i>
+<i class="bi bi-{{ icon_name }}" {% if color %}style="color: {{ color }}" {% endif %}></i>
 {% endif %} {% endmacro %} {% block page_type %}index{% endblock %} {% block
 head %}
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link
-  href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Poppins:wght@500;600&display=swap"
-  rel="stylesheet"
-/>
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='css/variables.css') }}"
-/>
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='css/layout.css') }}"
-/>
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='css/navbar.css') }}"
-/>
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='css/sidebar.css') }}"
-/>
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='css/sidebar_submenu.css') }}"
-/>
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='css/subcategory.css') }}"
-/>
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='css/card.css') }}"
-/>
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='css/search.css') }}"
-/>
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='css/modal.css') }}"
-/>
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='css/contextMenu.css') }}"
-/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Poppins:wght@500;600&display=swap"
+  rel="stylesheet" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/variables.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/layout.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar_submenu.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/subcategory.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/card.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/search.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/modal.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/contextMenu.css') }}" />
 {% endblock %} {% block content %} {# 顶部导航栏 #} {% include
 'common/navbar.html' %} {# 遮罩层 #}
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
@@ -81,18 +31,14 @@ head %}
     <div class="sidebar-group">
       <ul class="sidebar-menu">
         {% for category in categories %} {% if category.parent_id is none %}
-        <li
-          class="sidebar-menu-item {% if category.children.count() > 0 %}has-submenu{% endif %}"
-        >
-          <a href="#{{ category.name }}" class="sidebar-menu-link">
+        <li class="sidebar-menu-item {% if category.children.count() > 0 %}has-submenu{% endif %}">
+          <a href="#category-{{ category.id }}" class="sidebar-menu-link" data-category-id="{{ category.id }}">
             <span class="sidebar-menu-icon">
               {{ render_icon(category.icon or 'folder', category.color or
               '#3498db') }}
             </span>
             {{ category.name }} {% if category.children.count() > 0 %}
-            <span class="category-children-count"
-              >{{ category.children.count() }}</span
-            >
+            <!-- <span class="category-children-count">{{ category.children.count() }}</span> -->
             <button class="submenu-toggle" tabindex="-1" aria-label="展开/收起">
               <svg viewBox="0 0 24 24">
                 <polyline points="6 9 12 15 18 9" />
@@ -104,13 +50,10 @@ head %}
           <ul class="sidebar-submenu">
             {% for child in category.children %}
             <li class="sidebar-submenu-item">
-              <a
-                href="{{ url_for('main.category', id=child.id) }}"
-                class="sidebar-submenu-link"
-              >
+              <a href="#category-{{ category.id }}" class="sidebar-submenu-link" data-category-id="{{ category.id }}"
+                data-child-id="{{ child.id }}">
                 <span class="sidebar-menu-icon">
-                  {{ render_icon(child.icon or 'folder', child.color or
-                  '#3498db') }}
+                  {{ render_icon(child.icon or 'folder', child.color or '#3498db') }}
                 </span>
                 {{ child.name }}
               </a>
@@ -132,23 +75,12 @@ head %}
     <div class="main-search-container mb-4">
       <form id="searchForm" class="main-search-form">
         <div class="search-input-group">
-          <input
-            type="search"
-            name="q"
-            id="searchInput"
-            class="main-search-input"
-            placeholder="请输入关键字搜索网站"
-            autocomplete="off"
-          />
+          <input type="search" name="q" id="searchInput" class="main-search-input" placeholder="请输入关键字搜索网站"
+            autocomplete="off" />
           <button type="submit" class="main-search-button">
             <i class="bi bi-search"></i>
           </button>
-          <button
-            type="button"
-            id="clearSearch"
-            class="search-clear-button"
-            style="display: none"
-          >
+          <button type="button" id="clearSearch" class="search-clear-button" style="display: none">
             <i class="bi bi-x"></i>
           </button>
         </div>
@@ -167,11 +99,7 @@ head %}
           </div>
         </div>
         <div id="resultsContent">{# 搜索结果将通过JavaScript动态填充 #}</div>
-        <div
-          id="noResults"
-          class="text-center text-muted py-4"
-          style="display: none"
-        >
+        <div id="noResults" class="text-center text-muted py-4" style="display: none">
           <i class="bi bi-emoji-frown fs-4"></i>
           <p>未找到相关网站</p>
           <p class="text-muted">您可以尝试使用其他关键词，或浏览现有分类</p>
@@ -181,112 +109,129 @@ head %}
 
     {# 分类内容区域 #}
     <div id="categoriesContainer">
-      {% for category in categories %} {% if category.parent_id is none %}
-      <div id="{{ category.name }}" class="mb-5">
-        {% if category.children.count() == 0 %}
-        <div class="category-card">
-          <a
-            href="{{ url_for('main.category', id=category.id) }}"
-            class="category-heading-link"
-          >
-            <h3 class="category-heading">
-              <span
-                class="category-icon"
-                style="background-color: {{ category.color or '#3498db' }}"
-              >
-                <i class="bi bi-{{ category.icon or 'folder' }}"></i>
-              </span>
-              {{ category.name }}
-              <span class="category-count"
-                >（{{ category.website_list|length }}）</span
-              >
-            </h3>
-          </a>
+      {% for category in categories %}
+      {% if category.parent_id is none %}
+      <div class="category-card mb-5" id="category-{{ category.id }}">
+        <div class="d-flex align-items-center mb-3" style="gap: 10px;">
+          <span class="category-icon" style="background-color: {{ category.color or '#3498db' }}">
+            <i class="bi bi-{{ category.icon or 'folder' }}"></i>
+          </span>
+          <span class="fs-5 fw-bold">{{ category.name }}</span>
         </div>
-        {% endif %} {# 子分类标签导航 #} {% if category.children.count() > 0 %}
-        <div class="subcategory-tags">
-          <a
-            href="{{ url_for('main.category', id=category.id) }}"
-            class="subcategory-tag"
-          >
-            <span
-              class="tag-icon"
-              style="background-color: {{ category.color or '#3498db' }}"
-            >
-              <i class="bi bi-folder"></i>
-            </span>
-            全部
-            <span class="subcategory-count"
-              >({{ category.website_list|length }})</span
-            >
-          </a>
+        {% set has_children = category.children.count() > 0 %}
+        {% if has_children %}
+        <ul class="nav nav-pills mb-3" id="tab-{{ category.id }}" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="tab-all-{{ category.id }}" data-bs-toggle="pill"
+              data-bs-target="#tab-pane-all-{{ category.id }}" type="button" role="tab" aria-selected="true">
+              全部
+              <!-- <span class="badge rounded-pill bg-primary ms-1">
+                {{ category.website_list|length + (category.children|map(attribute='website_list')|map('length')|sum if
+                has_children else 0) }}
+              </span> -->
+            </button>
+          </li>
           {% for child in category.children %}
-          <a
-            href="{{ url_for('main.category', id=child.id) }}"
-            class="subcategory-tag"
-          >
-            <span
-              class="tag-icon"
-              style="background-color: {{ child.color or '#6c757d' }}"
-            >
-              <i class="bi bi-{{ child.icon or 'tag' }}"></i>
-            </span>
-            {{ child.name }}
-            <span class="subcategory-count"
-              >({{ child.website_list|length }})</span
-            >
-          </a>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab-{{ child.id }}" data-bs-toggle="pill"
+              data-bs-target="#tab-pane-{{ child.id }}" type="button" role="tab" aria-selected="false">
+              <span class="sidebar-menu-icon" style="margin-right:6px;">
+                {{ render_icon(child.icon or 'folder', child.color or '#3498db') }}
+              </span>
+              {{ child.name }}
+              <!-- <span class="badge rounded-pill bg-secondary ms-1">{{ child.website_list|length }}</span> -->
+            </button>
+          </li>
           {% endfor %}
-        </div>
-        {% endif %} {% set websites = category.website_list %} {% if websites %}
-        <div
-          class="card-container {% if current_user.is_authenticated and current_user.is_admin %}draggable{% endif %}"
-          data-category-id="{{ category.id }}"
-        >
-          {% for website in websites[:category.display_limit] %}
-          <a
-            href="{% if settings.enable_transition %}{{ url_for('main.goto', website_id=website.id) }}{% else %}{{ url_for('main.site', id=website.id) }}{% endif %}"
-            class="site-card {% if current_user.is_authenticated and current_user.is_admin %}draggable{% endif %}"
-            data-id="{{ website.id }}"
-            data-website-id="{{ website.id }}"
-            data-website-url="{{ website.url }}"
-            data-sort="{{ website.sort_order|default(loop.index0*10) }}"
-            title="{{ website.description }}"
-            data-bs-toggle="tooltip"
-            data-bs-placement="bottom"
-            target="_blank"
-          >
-            {% if website.is_private %}
-            <div class="private-badge" title="私有链接">
-              <i class="bi bi-lock-fill"></i>
-            </div>
-            {% endif %}
-            <div class="site-header">
-              <div class="site-icon">
-                {% if website.icon %}
-                <img src="{{ website.icon }}" alt="{{ website.title }}" />
-                {% else %}
-                <div class="default-site-icon">
-                  {{ website.title|first|upper }}
+        </ul>
+        {% endif %}
+        <div class="tab-content">
+          <div class="tab-pane fade show active" id="tab-pane-all-{{ category.id }}" role="tabpanel">
+            <div class="card-container">
+              {% set all_websites = category.website_list[:] %}
+              {% for child in category.children %}
+                {% set _ = all_websites.extend(child.website_list) %}
+              {% endfor %}
+              {% set all_websites = all_websites|sort(attribute='sort_order', reverse=True) %}
+              {% if all_websites|length == 0 %}
+              <div class="no-website-tip">
+                <i class="bi bi-emoji-frown"></i>
+                <div>还没有添加网站</div>
+              </div>
+              {% else %}
+              {% for website in all_websites %}
+              {# 复用 site-card 结构 #}
+              <a href="{% if settings.enable_transition %}{{ url_for('main.goto', website_id=website.id) }}{% else %}{{ url_for('main.site', id=website.id) }}{% endif %}"
+                class="site-card" data-id="{{ website.id }}" data-website-id="{{ website.id }}"
+                data-website-url="{{ website.url }}" data-sort="{{ website.sort_order|default(loop.index0*10) }}"
+                title="{{ website.description }}" data-bs-toggle="tooltip" data-bs-placement="bottom" target="_blank">
+                {% if website.is_private %}
+                <div class="private-badge" title="私有链接">
+                  <i class="bi bi-lock-fill"></i>
                 </div>
                 {% endif %}
-              </div>
-              <div class="site-text">
-                <h5 class="site-title">{{ website.title }}</h5>
-                <p class="site-description">
-                  {{ website.description|truncate(60) }}
-                </p>
-              </div>
+                <div class="site-header">
+                  <div class="site-icon">
+                    {% if website.icon %}
+                    <img src="{{ website.icon }}" alt="{{ website.title }}" />
+                    {% else %}
+                    <div class="default-site-icon">
+                      {{ website.title|first|upper }}
+                    </div>
+                    {% endif %}
+                  </div>
+                  <div class="site-text">
+                    <h5 class="site-title">{{ website.title }}</h5>
+                    <p class="site-description">{{ website.description|truncate(60) }}</p>
+                  </div>
+                </div>
+              </a>
+              {% endfor %}
+              {% endif %}
             </div>
-          </a>
+          </div>
+          {% for child in category.children %}
+          <div class="tab-pane fade" id="tab-pane-{{ child.id }}" role="tabpanel">
+            <div class="card-container">
+              {% if child.website_list|length == 0 %}
+              <div class="no-website-tip">
+                <i class="bi bi-emoji-frown"></i>
+                <div>还没有添加网站</div>
+              </div>
+              {% else %}
+              {% for website in child.website_list %}
+              {# 复用 site-card 结构 #}
+              <a href="{% if settings.enable_transition %}{{ url_for('main.goto', website_id=website.id) }}{% else %}{{ url_for('main.site', id=website.id) }}{% endif %}"
+                class="site-card" data-id="{{ website.id }}" data-website-id="{{ website.id }}"
+                data-website-url="{{ website.url }}" data-sort="{{ website.sort_order|default(loop.index0*10) }}"
+                title="{{ website.description }}" data-bs-toggle="tooltip" data-bs-placement="bottom" target="_blank">
+                {% if website.is_private %}
+                <div class="private-badge" title="私有链接">
+                  <i class="bi bi-lock-fill"></i>
+                </div>
+                {% endif %}
+                <div class="site-header">
+                  <div class="site-icon">
+                    {% if website.icon %}
+                    <img src="{{ website.icon }}" alt="{{ website.title }}" />
+                    {% else %}
+                    <div class="default-site-icon">
+                      {{ website.title|first|upper }}
+                    </div>
+                    {% endif %}
+                  </div>
+                  <div class="site-text">
+                    <h5 class="site-title">{{ website.title }}</h5>
+                    <p class="site-description">{{ website.description|truncate(60) }}</p>
+                  </div>
+                </div>
+              </a>
+              {% endfor %}
+              {% endif %}
+            </div>
+          </div>
           {% endfor %}
         </div>
-        {% else %}
-        <div class="text-center text-muted py-4">
-          <i class="bi bi-emoji-neutral fs-4"></i>
-          <p>暂无网站</p>
-        </div>
-        {% endif %}
       </div>
       {% endif %} {% endfor %}
     </div>
@@ -298,11 +243,7 @@ head %}
     <div class="modal-content quick-add-modal">
       <div class="modal-header">
         <h5><i class="bi bi-plus-circle me-2"></i>快速添加链接</h5>
-        <button
-          type="button"
-          class="btn-close"
-          onclick="closeQuickAddModal()"
-        ></button>
+        <button type="button" class="btn-close" onclick="closeQuickAddModal()"></button>
       </div>
       <div class="modal-body" style="position: relative">
         <!-- 加载状态覆盖层 -->
@@ -314,18 +255,11 @@ head %}
         <div class="row g-3">
           <div class="col-md-12">
             <label class="form-label">网站标题</label>
-            <input
-              type="text"
-              id="quickAddTitle"
-              class="form-control"
-              placeholder="请输入网站标题"
-            />
+            <input type="text" id="quickAddTitle" class="form-control" placeholder="请输入网站标题" />
           </div>
 
           <div class="col-md-12">
-            <label class="form-label"
-              >所属分类 <span class="text-danger">*</span></label
-            >
+            <label class="form-label">所属分类 <span class="text-danger">*</span></label>
             <div class="category-select-container">
               <select id="quickAddCategory" class="form-select" required>
                 <option value="">请选择分类</option>
@@ -343,50 +277,27 @@ head %}
 
           <div class="col-md-12">
             <label class="form-label">网站链接</label>
-            <input
-              type="text"
-              id="quickAddUrl"
-              class="form-control"
-              placeholder="https://example.com"
-            />
+            <input type="text" id="quickAddUrl" class="form-control" placeholder="https://example.com" />
           </div>
 
           <div class="col-md-12">
             <label class="form-label">网站图标</label>
             <div class="input-group">
-              <span
-                class="input-group-text p-0 border-0 bg-transparent"
-                style="width: 32px"
-              >
-                <img
-                  id="quickAddIconPreview"
-                  src=""
-                  alt=""
-                  style="
+              <span class="input-group-text p-0 border-0 bg-transparent" style="width: 32px">
+                <img id="quickAddIconPreview" src="" alt="" style="
                     width: 24px;
                     height: 24px;
                     object-fit: contain;
                     display: none;
-                  "
-                />
+                  " />
               </span>
-              <input
-                type="text"
-                id="quickAddIcon"
-                class="form-control"
-                placeholder="图标URL（自动获取）"
-              />
+              <input type="text" id="quickAddIcon" class="form-control" placeholder="图标URL（自动获取）" />
             </div>
           </div>
 
           <div class="col-md-12">
             <label class="form-label">网站描述</label>
-            <textarea
-              id="quickAddDescription"
-              class="form-control"
-              rows="2"
-              placeholder="简要描述网站内容和功能"
-            ></textarea>
+            <textarea id="quickAddDescription" class="form-control" rows="2" placeholder="简要描述网站内容和功能"></textarea>
           </div>
 
           <div class="col-md-12">
@@ -395,26 +306,15 @@ head %}
                 <label class="form-label">访问权限</label>
                 <div class="d-flex gap-3">
                   <div class="form-check">
-                    <input
-                      class="form-check-input"
-                      type="radio"
-                      name="quickAddPrivacy"
-                      id="quickAddPublic"
-                      value="0"
-                      checked
-                    />
+                    <input class="form-check-input" type="radio" name="quickAddPrivacy" id="quickAddPublic" value="0"
+                      checked />
                     <label class="form-check-label" for="quickAddPublic">
                       <i class="bi bi-globe"></i> 公开
                     </label>
                   </div>
                   <div class="form-check">
-                    <input
-                      class="form-check-input"
-                      type="radio"
-                      name="quickAddPrivacy"
-                      id="quickAddPrivate"
-                      value="1"
-                    />
+                    <input class="form-check-input" type="radio" name="quickAddPrivacy" id="quickAddPrivate"
+                      value="1" />
                     <label class="form-check-label" for="quickAddPrivate">
                       <i class="bi bi-lock"></i> 私有
                     </label>
@@ -423,34 +323,18 @@ head %}
               </div>
               <div class="col-md-6">
                 <label class="form-label">排序权重</label>
-                <input
-                  type="number"
-                  id="quickAddWeight"
-                  class="form-control form-control-sm"
-                  min="0"
-                  max="9999"
-                  value="0"
-                  placeholder="值越大排序越靠前"
-                  title="值越大排序越靠前，默认为0"
-                />
+                <input type="number" id="quickAddWeight" class="form-control form-control-sm" min="0" max="9999"
+                  value="0" placeholder="值越大排序越靠前" title="值越大排序越靠前，默认为0" />
               </div>
             </div>
           </div>
         </div>
       </div>
       <div class="modal-footer">
-        <button
-          type="button"
-          class="btn btn-outline-secondary"
-          onclick="closeQuickAddModal()"
-        >
+        <button type="button" class="btn btn-outline-secondary" onclick="closeQuickAddModal()">
           取消
         </button>
-        <button
-          type="button"
-          class="btn btn-primary"
-          onclick="submitQuickAdd()"
-        >
+        <button type="button" class="btn btn-primary" onclick="submitQuickAdd()">
           <i class="bi bi-plus-lg me-1"></i>添加
         </button>
       </div>
@@ -499,9 +383,7 @@ head %}
           </div>
 
           <div class="col-md-12">
-            <label class="form-label"
-              >所属分类 <span class="text-danger">*</span></label
-            >
+            <label class="form-label">所属分类 <span class="text-danger">*</span></label>
             <div class="category-select-container">
               <select id="editCategory" class="form-select" required>
                 <option value="">请选择分类</option>
@@ -521,12 +403,7 @@ head %}
             <label class="form-label">链接地址</label>
             <div class="input-group">
               <input type="url" id="editUrl" class="form-control" required />
-              <button
-                type="button"
-                id="fetchInfo"
-                class="btn btn-outline-secondary"
-                title="获取网站信息"
-              >
+              <button type="button" id="fetchInfo" class="btn btn-outline-secondary" title="获取网站信息">
                 <i class="bi bi-cloud-download"></i>
               </button>
             </div>
@@ -535,39 +412,21 @@ head %}
           <div class="col-md-12">
             <label class="form-label">网站图标</label>
             <div class="input-group">
-              <span
-                class="input-group-text p-0 border-0 bg-transparent"
-                style="width: 32px"
-              >
-                <img
-                  id="editIconPreview"
-                  src=""
-                  alt=""
-                  style="
+              <span class="input-group-text p-0 border-0 bg-transparent" style="width: 32px">
+                <img id="editIconPreview" src="" alt="" style="
                     width: 24px;
                     height: 24px;
                     object-fit: contain;
                     display: none;
-                  "
-                />
+                  " />
               </span>
-              <input
-                type="url"
-                id="editIcon"
-                class="form-control"
-                placeholder="图标URL（自动获取）"
-              />
+              <input type="url" id="editIcon" class="form-control" placeholder="图标URL（自动获取）" />
             </div>
           </div>
 
           <div class="col-md-12">
             <label class="form-label">网站描述</label>
-            <textarea
-              id="editDescription"
-              class="form-control"
-              rows="1"
-              placeholder="简要描述网站内容和功能"
-            ></textarea>
+            <textarea id="editDescription" class="form-control" rows="1" placeholder="简要描述网站内容和功能"></textarea>
           </div>
 
           <div class="col-md-12">
@@ -576,26 +435,13 @@ head %}
                 <label class="form-label">访问权限</label>
                 <div class="d-flex gap-3">
                   <div class="form-check">
-                    <input
-                      class="form-check-input"
-                      type="radio"
-                      name="editPrivacy"
-                      id="editPublic"
-                      value="0"
-                      checked
-                    />
+                    <input class="form-check-input" type="radio" name="editPrivacy" id="editPublic" value="0" checked />
                     <label class="form-check-label" for="editPublic">
                       <i class="bi bi-globe"></i> 公开
                     </label>
                   </div>
                   <div class="form-check">
-                    <input
-                      class="form-check-input"
-                      type="radio"
-                      name="editPrivacy"
-                      id="editPrivate"
-                      value="1"
-                    />
+                    <input class="form-check-input" type="radio" name="editPrivacy" id="editPrivate" value="1" />
                     <label class="form-check-label" for="editPrivate">
                       <i class="bi bi-lock"></i> 私有
                     </label>
@@ -604,16 +450,8 @@ head %}
               </div>
               <div class="col-md-6">
                 <label class="form-label">排序权重</label>
-                <input
-                  type="number"
-                  id="editWeight"
-                  class="form-control form-control-sm"
-                  min="0"
-                  max="9999"
-                  value="0"
-                  placeholder="值越大排序越靠前"
-                  title="值越大排序越靠前，默认为0"
-                />
+                <input type="number" id="editWeight" class="form-control form-control-sm" min="0" max="9999" value="0"
+                  placeholder="值越大排序越靠前" title="值越大排序越靠前，默认为0" />
               </div>
             </div>
           </div>
@@ -636,10 +474,7 @@ head %}
 {# 重复链接提醒对话框 #}
 <div class="modal-overlay" id="duplicateLinkModal" style="display: none">
   <div class="edit-modal">
-    <div
-      class="modal-header"
-      style="background: linear-gradient(to right, #ff9800, #f44336)"
-    >
+    <div class="modal-header" style="background: linear-gradient(to right, #ff9800, #f44336)">
       <h5><i class="bi bi-exclamation-triangle me-2"></i>链接已存在</h5>
       <button class="modal-close" id="closeDuplicateModal">
         <i class="bi bi-x"></i>
@@ -679,11 +514,7 @@ head %}
       <button type="button" class="btn btn-warning" id="addDuplicateLink">
         <i class="bi bi-plus-circle me-1"></i>仍然添加
       </button>
-      <button
-        type="button"
-        class="btn btn-outline-secondary"
-        id="cancelDuplicateAdd"
-      >
+      <button type="button" class="btn btn-outline-secondary" id="cancelDuplicateAdd">
         取消
       </button>
     </div>
@@ -717,6 +548,34 @@ head %}
     });
 
     // 注意：图标错误处理已移至base.html全局处理
+  });
+  // 监听侧边栏子分类点击
+  document.querySelectorAll('.sidebar-submenu-link[data-category-id][data-child-id]').forEach(function (link) {
+    link.addEventListener('click', function (e) {
+      e.preventDefault();
+      var categoryId = this.getAttribute('data-category-id');
+      var childId = this.getAttribute('data-child-id');
+      // 滚动到主分类卡片
+      var card = document.getElementById('category-' + categoryId);
+      if (card) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // 切换tab
+        var tabBtn = card.querySelector('.nav-pills .nav-link[id="tab-' + childId + '"]');
+        if (tabBtn) {
+          tabBtn.click();
+        }
+      }
+    });
+    document.querySelectorAll('.sidebar-menu-link[data-category-id]').forEach(function (link) {
+      link.addEventListener('click', function (e) {
+        var categoryId = this.getAttribute('data-category-id');
+        var card = document.getElementById('category-' + categoryId);
+        if (card) {
+          e.preventDefault();
+          card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
   });
 </script>
 {% endblock %}

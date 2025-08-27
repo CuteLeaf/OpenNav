@@ -110,6 +110,7 @@ def category(id):
         context['children'] = children
     
     return render_template('category.html', **context)
+    
 
 @bp.route('/site/<int:id>')
 def site(id):
@@ -1355,4 +1356,36 @@ def get_category_website_count(category_id):
         return jsonify({
             'success': False,
             'message': f'获取网站总数失败: {str(e)}'
-        }), 500 
+        }), 500
+
+@bp.route('/api/category/<int:category_id>/websites')
+def get_category_websites(category_id):
+    """
+    获取某个分类及其所有子分类下的网站
+    """
+    category = Category.query.get_or_404(category_id)
+    # 获取所有相关分类id（主分类+子分类）
+    category_ids = [category.id]
+    if hasattr(category, 'children'):
+        category_ids += [child.id for child in category.children]
+    # 查询所有相关网站
+    websites_query = Website.query.filter(Website.category_id.in_(category_ids))
+    # 权限过滤
+    if not current_user.is_authenticated:
+        websites_query = websites_query.filter_by(is_private=False)
+    websites = websites_query.order_by(
+        Website.sort_order.desc(),
+        Website.created_at.asc(),
+        Website.views.desc()
+    ).all()
+    result = []
+    for w in websites:
+        result.append({
+            "id": w.id,
+            "title": w.title or "",
+            "description": w.description or "",
+            "icon": w.icon or "",
+            "url": w.url or "",
+            "is_private": bool(getattr(w, 'is_private', False))
+        })
+    return jsonify({"websites": result})

@@ -212,4 +212,4 @@ def record_visit(website_id):
         return jsonify({'success': True, 'message': '访问记录已更新'})
     except Exception as e:
         db.session.rollback()
-        return jsonify({'success': False, 'message': f'记录访问失败: {str(e)}'}), 500 
+        return jsonify({'success': False, 'message': f'记录访问失败: {str(e)}'}), 500

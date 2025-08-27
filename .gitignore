@@ -42,6 +42,8 @@ flask_session/
 *.db
 *.sqlite
 *.sqlite3
+data/
+app/backups/
 
 # Logs
 *.log
