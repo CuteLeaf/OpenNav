@@ -135,31 +135,59 @@ def delete_category(id):
 @admin_required
 def websites():
     page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('per_page', 10, type=int)  # 从URL参数中获取每页显示数量
+    per_page = request.args.get('per_page', 10, type=int)
     category_id = request.args.get('category_id', type=int)
-    
+
     # 构建查询
     query = Website.query
-    
-    # 应用分类筛选
     if category_id:
-        query = query.filter_by(category_id=category_id)
-    
+        query = query.filter(Website.category_id == category_id)
+
     # 获取分页数据
     pagination = query.order_by(Website.created_at.desc()).paginate(
         page=page, per_page=per_page, error_out=False
     )
     websites = pagination.items
-    
-    # 获取所有分类供筛选使用
-    categories = Category.query.order_by(Category.order.asc()).all()
-    
+
+    # 递归生成带有主/子分类标识的分类名
+
+    def get_category_display(categories, level=0):
+        result = []
+        # 每一层都按 order 降序
+        categories = sorted(categories, key=lambda x: x.order if hasattr(x, 'order') else 0, reverse=True)
+        for c in categories:
+            prefix = ''
+            if level == 1:
+                prefix = '└─ '
+            elif level > 1:
+                prefix = '　' * (level-1) + '└─ '
+            result.append({
+                'id': c.id,
+                'name': f"{prefix}{c.name}",
+                'color': c.color,
+                'icon': c.icon,
+                'parent_id': c.parent_id
+            })
+            # 递归处理子分类，确保排序（降序）
+            children = c.children.order_by(Category.order.desc()).all() if hasattr(c, 'children') else []
+            if children:
+                result.extend(get_category_display(children, level+1))
+        return result
+
+    # 只查顶级分类，递归生成，确保排序（降序）
+    top_categories = Category.query.filter(Category.parent_id.is_(None)).order_by(Category.order.desc()).all()
+    categories_display = get_category_display(top_categories)
+
+    # 构建id到显示名的映射，方便模板渲染
+    category_display_map = {c['id']: c for c in categories_display}
+
     return render_template(
         'admin/websites.html',
         title='网站管理',
         websites=websites,
         pagination=pagination,
-        categories=categories
+        categories=categories_display,
+        category_display_map=category_display_map
     )
 
 @bp.route('/api/website/batch-delete', methods=['POST'])

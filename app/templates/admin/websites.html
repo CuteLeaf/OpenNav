@@ -178,16 +178,18 @@
             </td>
             <td>
               {% if website.category %}
-              <span
-                class="badge"
-                style="background-color: {{ website.category.color or '#3498db' }};"
-              >
-                {% if website.category.icon %}
-                <i class="bi bi-{{ website.category.icon }} me-1"></i>
-                {% endif %} {{ website.category.name }}
-              </span>
+                {% set cat = category_display_map.get(website.category.id) %}
+                <span
+                  class="badge"
+                  style="background-color: {{ cat.color or '#3498db' }};"
+                >
+                  {% if cat.icon %}
+                  <i class="bi bi-{{ cat.icon }} me-1"></i>
+                  {% endif %}
+                  {{ cat.name }}
+                </span>
               {% else %}
-              <span class="badge bg-secondary">未分类</span>
+                <span class="badge bg-secondary">未分类</span>
               {% endif %}
             </td>
             <td class="text-center">{{ website.views }}</td>

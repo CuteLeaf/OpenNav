@@ -47,7 +47,7 @@
           <strong>{{ current_user.username }}</strong>
         </div>
         {% if current_user.is_admin %}
-        <a href="{{ url_for('admin.index') }}" class="user-dropdown-item">
+        <a href="{{ url_for('admin.index') }}"  target="_blank" class="user-dropdown-item">
           <i class="bi bi-speedometer2 me-2"></i>管理面板
         </a>
         {% endif %}

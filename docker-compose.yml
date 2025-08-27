@@ -6,7 +6,7 @@ services:
     container_name: nav
     restart: always
     ports:
-      - "8988:80" # Nginx端口
+      - "7388:80" # Nginx端口
     volumes:
       - ./data:/data # 数据目录（包含数据库）
       - ./data/backups:/app/app/backups # 备份目录

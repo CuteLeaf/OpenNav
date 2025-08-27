@@ -116,7 +116,7 @@ BookNav 基于 Flask Web 框架打造，提供了以下核心功能：
 2.  **获取代码**:
 
     ```bash
-    git clone https://github.com/yourusername/booknav.git
+    git clone https://github.com/yourusername/book-nav.git
     cd booknav
     sed -i 's/\r$//' docker/cleanup_backups.sh
     sed -i 's/\r$//' docker/entrypoint.sh
@@ -131,7 +131,7 @@ BookNav 基于 Flask Web 框架打造，提供了以下核心功能：
 
 4.  **访问**:
 
-    - 在浏览器中打开 `http://<您的服务器IP>:8988`
+    - 在浏览器中打开 `http://<您的服务器IP>:7388`
     - 默认用户名：`admin`，密码：`admin123`
 
 #### 拉取镜像运行
@@ -141,11 +141,11 @@ version: "3"
 
 services:
   nav:
-    image: yilan666/booknav-nav:1.9.5
+    image: cuteleaf/book-nav:2.0.0
     container_name: nav
     restart: always
     ports:
-      - "8988:80" # Nginx端口
+      - "7388:80" # Nginx端口
     volumes:
       - ./data:/data # 数据目录
       - ./data/backups:/app/app/backups # 备份目录
@@ -283,7 +283,7 @@ docker-compose up -d
 ## 📝 注意事项
 
 - 首次部署后，请立即修改默认的管理员密码
-- Docker 部署时请确保 8988 端口未被占用
+- Docker 部署时请确保 7388 端口未被占用
 - 为保证数据安全，请定期备份 `data` 目录
 
 ## 📄 许可证

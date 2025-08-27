@@ -17,7 +17,7 @@ class CategoryForm(FlaskForm):
     def __init__(self, *args, **kwargs):
         super(CategoryForm, self).__init__(*args, **kwargs)
         self.parent_id.choices = [(0, '-- 无 --')] + [
-            (c.id, c.name) for c in Category.query.filter(Category.parent_id.is_(None)).all()
+            (c.id, c.name) for c in Category.query.filter(Category.parent_id.is_(None)).order_by(Category.order.desc()).all()
         ]
         
     def validate_parent_id(self, field):
@@ -39,7 +39,26 @@ class WebsiteForm(FlaskForm):
     
     def __init__(self, *args, **kwargs):
         super(WebsiteForm, self).__init__(*args, **kwargs)
-        self.category_id.choices = [(c.id, c.name) for c in Category.query.order_by(Category.order.asc()).all()]
+        def get_choices(categories, level=0):
+            choices = []
+            # 降序排列
+            categories = sorted(categories, key=lambda x: x.order if hasattr(x, 'order') else 0, reverse=True)
+            for c in categories:
+                prefix = ''
+                if level == 1:
+                    prefix = '└─ '
+                elif level > 1:
+                    prefix = '　' * (level-1) + '└─ '
+                choices.append((c.id, f"{prefix}{c.name}"))
+                # 递归处理子分类，降序
+                children = c.children.order_by(Category.order.desc()).all() if hasattr(c, 'children') else []
+                if children:
+                    choices.extend(get_choices(children, level+1))
+            return choices
+
+        # 只查顶级分类，递归生成choices，降序
+        top_categories = Category.query.filter(Category.parent_id.is_(None)).order_by(Category.order.desc()).all()
+        self.category_id.choices = get_choices(top_categories)
 
 class InvitationForm(FlaskForm):
     count = IntegerField('生成数量', default=1, validators=[DataRequired()])
