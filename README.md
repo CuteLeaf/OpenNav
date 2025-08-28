@@ -136,14 +136,14 @@ OpenNav 基于 Flask Web 框架打造，提供了以下核心功能：
     - 在浏览器中打开 `http://<您的服务器IP>:7388`
     - 默认用户名：`admin`，密码：`admin123`
 
-#### 拉取镜像运行
+#### 拉取镜像运行 (推荐)
 
 ```yaml
 version: "3"
 
 services:
   nav:
-    image: cuteleaf/book-nav:2.1.2
+    image: cuteleaf/book-nav:2.1.3
     container_name: nav
     restart: always
     ports:
