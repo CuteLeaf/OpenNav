@@ -32,7 +32,7 @@ jobs:
         id: meta  # 步骤ID，用于后续引用输出
         uses: docker/metadata-action@v5  # 自动生成标签和元数据
         with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/OpenNav  # 目标镜像名称（格式：用户名/仓库名）
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/opennav  # 目标镜像名称（格式：用户名/仓库名）
           flavor: |
             latest=false  # 禁用metadata-action默认的latest标签生成逻辑
           tags: |  # 自定义标签规则（注意缩进）
@@ -51,6 +51,6 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}  # 自动生成的镜像标签
           platforms: linux/amd64, linux/arm64  # 目标平台：amd64 和 arm64 架构
           # 构建缓存配置（从指定镜像拉取缓存）
-          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/docker-test:buildcache
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/opennav:buildcache
           # 将构建缓存推送到指定镜像（模式设为max以包含全部缓存层）
-          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/docker-test:buildcache,mode=max
+          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/opennav:buildcache,mode=max
