@@ -267,6 +267,18 @@ def batch_update_websites():
             if 'is_private' in update_data:
                 website.is_private = update_data['is_private']
                 updated_count += 1
+            if 'category_id' in update_data:
+                # 验证分类是否存在
+                category_id = update_data['category_id']
+                if category_id:
+                    category = Category.query.get(category_id)
+                    if category:
+                        website.category_id = category_id
+                        updated_count += 1
+                else:
+                    # 如果传入空值，则设为未分类
+                    website.category_id = None
+                    updated_count += 1
                 
         db.session.commit()
         

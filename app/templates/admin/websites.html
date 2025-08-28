@@ -129,6 +129,9 @@
         <button type="button" class="btn btn-secondary btn-sm" onclick="togglePrivate()">
           <i class="bi bi-lock"></i> 切换私有状态
         </button>
+        <button type="button" class="btn btn-info btn-sm" onclick="showBatchCategoryModal()">
+          <i class="bi bi-folder"></i> 更改分类
+        </button>
       </div>
     </div>
   </div>
@@ -297,6 +300,38 @@
     {% endif %}
   </div>
 </div>
+
+<!-- 批量更改分类模态框 -->
+<div class="modal fade" id="batchCategoryModal" tabindex="-1" aria-labelledby="batchCategoryModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="batchCategoryModalLabel">
+          <i class="bi bi-folder me-2"></i>批量更改分类
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>将要更改 <span id="selectedCount" class="fw-bold text-primary">0</span> 个网站的分类</p>
+        <div class="mb-3">
+          <label for="newCategorySelect" class="form-label">选择新分类</label>
+          <select class="form-select" id="newCategorySelect" required>
+            <option value="">请选择分类</option>
+            {% for category in categories %}
+            <option value="{{ category.id }}">{{ category.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+        <button type="button" class="btn btn-primary" onclick="batchUpdateCategory()">
+          <i class="bi bi-check-lg me-1"></i>确认更改
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block admin_scripts %}
@@ -432,6 +467,53 @@
     })
     .catch(error => {
       console.error('批量更新出错:', error);
+      alert('操作失败，请重试');
+    });
+  }
+
+  // 显示批量更改分类模态框
+  function showBatchCategoryModal() {
+    const selectedIds = getSelectedIds();
+    if (!selectedIds.length) return;
+    
+    document.getElementById('selectedCount').textContent = selectedIds.length;
+    const modal = new bootstrap.Modal(document.getElementById('batchCategoryModal'));
+    modal.show();
+  }
+
+  // 批量更改分类
+  function batchUpdateCategory() {
+    const selectedIds = getSelectedIds();
+    const newCategoryId = document.getElementById('newCategorySelect').value;
+    
+    if (!selectedIds.length || !newCategoryId) {
+      alert('请选择分类');
+      return;
+    }
+
+    fetch('/admin/api/website/batch-update', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+      },
+      body: JSON.stringify({
+        ids: selectedIds,
+        data: { category_id: parseInt(newCategoryId) }
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        const modal = bootstrap.Modal.getInstance(document.getElementById('batchCategoryModal'));
+        modal.hide();
+        window.location.reload();
+      } else {
+        alert(data.message || '操作失败');
+      }
+    })
+    .catch(error => {
+      console.error('批量更新分类出错:', error);
       alert('操作失败，请重试');
     });
   }
