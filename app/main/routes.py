@@ -31,7 +31,7 @@ def index():
         )
     featured_sites = featured_sites_query.order_by(Website.views.desc()).limit(6).all()
     
-    # 预先加载每个分类下的网站，按照自定义排序顺序，添加limit限制提升性能
+    # 预先加载每个分类下的网站，支持 display_limit=0 表示全部显示，否则按 display_limit 限制
     for category in categories:
         # 构建查询条件（用于权限过滤）
         websites_query = Website.query.filter_by(category_id=category.id)
@@ -43,18 +43,23 @@ def index():
                 (Website.created_by_id == current_user.id) |
                 (Website.visible_to.contains(str(current_user.id)))
             )
-        
         # 计算该分类下的全部链接数量（用于显示）
         category.total_count = websites_query.count()
-        
-        # 加载需要显示的链接（性能优化）
-        category.website_list = websites_query.order_by(
-            Website.sort_order.desc(),  # 改为降序，权重大的排在前面
-            Website.created_at.asc(),
-            Website.views.desc()
-        ).limit(category.display_limit).all()  # 添加limit限制，只加载需要显示的链接数量
-        
-        # 为子分类计算链接数量
+        # 判断 display_limit
+        display_limit = getattr(category, 'display_limit', None)
+        if display_limit is not None and isinstance(display_limit, int) and display_limit > 0:
+            category.website_list = websites_query.order_by(
+                Website.sort_order.desc(),
+                Website.created_at.asc(),
+                Website.views.desc()
+            ).limit(display_limit).all()
+        else:
+            category.website_list = websites_query.order_by(
+                Website.sort_order.desc(),
+                Website.created_at.asc(),
+                Website.views.desc()
+            ).all()
+        # 为子分类计算链接数量和网站列表
         for child in category.children:
             child_query = Website.query.filter_by(category_id=child.id)
             if not current_user.is_authenticated:
@@ -66,6 +71,21 @@ def index():
                     (Website.visible_to.contains(str(current_user.id)))
                 )
             child.total_count = child_query.count()
+            
+            # 为子分类应用 display_limit 逻辑
+            child_display_limit = getattr(child, 'display_limit', None)
+            if child_display_limit is not None and isinstance(child_display_limit, int) and child_display_limit > 0:
+                child.website_list = child_query.order_by(
+                    Website.sort_order.desc(),
+                    Website.created_at.asc(),
+                    Website.views.desc()
+                ).limit(child_display_limit).all()
+            else:
+                child.website_list = child_query.order_by(
+                    Website.sort_order.desc(),
+                    Website.created_at.asc(),
+                    Website.views.desc()
+                ).all()
     
     # 获取站点设置
     settings = SiteSettings.get_settings()
@@ -79,14 +99,16 @@ def index():
 @bp.route('/category/<int:id>')
 def category(id):
     category = Category.query.get_or_404(id)
-    
-    # 获取高亮显示参数
     highlight_id = request.args.get('highlight')
-    
-    # 构建查询：直接查询该分类下的网站
-    websites_query = Website.query.filter_by(category_id=id)
-    
-    # 根据用户权限过滤私有链接
+
+    # 获取所有相关分类id（主分类+子分类）
+    category_ids = [category.id]
+    children = Category.query.filter_by(parent_id=id).all()
+    if children:
+        category_ids += [child.id for child in children]
+
+    # 查询所有相关分类下的网站
+    websites_query = Website.query.filter(Website.category_id.in_(category_ids))
     if not current_user.is_authenticated:
         websites_query = websites_query.filter_by(is_private=False)
     elif not current_user.is_admin:
@@ -95,13 +117,12 @@ def category(id):
             (Website.created_by_id == current_user.id) |
             (Website.visible_to.contains(str(current_user.id)))
         )
-    
     websites = websites_query.order_by(
-        Website.sort_order.desc(),  # 改为降序，权重大的排在前面
-        Website.created_at.asc(), 
+        Website.sort_order.desc(),
+        Website.created_at.asc(),
         Website.views.desc()
     ).all()
-    
+
     # 获取所有分类用于修改链接表单
     all_categories = Category.query.order_by(Category.order.desc()).all()
     

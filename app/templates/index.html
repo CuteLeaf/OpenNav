@@ -110,18 +110,18 @@ head %}
     {# 推荐区块 #}
     {% set recommended_dict = {} %}
     {% for category in categories %}
-      {% for website in category.website_list %}
-        {% if website.is_featured %}
-          {% set _ = recommended_dict.update({website.id: website}) %}
-        {% endif %}
-      {% endfor %}
-      {% for child in category.children %}
-        {% for website in child.website_list %}
-          {% if website.is_featured %}
-            {% set _ = recommended_dict.update({website.id: website}) %}
-          {% endif %}
-        {% endfor %}
-      {% endfor %}
+    {% for website in category.website_list %}
+    {% if website.is_featured %}
+    {% set _ = recommended_dict.update({website.id: website}) %}
+    {% endif %}
+    {% endfor %}
+    {% for child in category.children %}
+    {% for website in child.website_list %}
+    {% if website.is_featured %}
+    {% set _ = recommended_dict.update({website.id: website}) %}
+    {% endif %}
+    {% endfor %}
+    {% endfor %}
     {% endfor %}
     {% set recommended_websites = recommended_dict.values() %}
     {% if recommended_websites|length > 0 %}
@@ -135,26 +135,29 @@ head %}
       <div class="card-container">
         {% set sorted_recommended = recommended_websites|sort(attribute='sort_order', reverse=True) %}
         {% for website in sorted_recommended %}
-  <a href="{% if settings.enable_transition %}{{ url_for('main.goto', website_id=website.id) }}{% else %}{{ url_for('main.site', id=website.id) }}{% endif %}"
-     class="site-card" data-id="{{ website.id }}" data-website-id="{{ website.id }}"
-     data-website-url="{{ website.url }}" data-sort="{{ website.sort_order|default(loop.index0*10) }}" target="_blank">
+        <a href="{% if settings.enable_transition %}{{ url_for('main.goto', website_id=website.id) }}{% else %}{{ url_for('main.site', id=website.id) }}{% endif %}"
+          class="site-card" data-id="{{ website.id }}" data-website-id="{{ website.id }}"
+          data-website-url="{{ website.url }}" data-sort="{{ website.sort_order|default(loop.index0*10) }}"
+          target="_blank">
           <div class="site-header">
             <span class="site-icon">
               {% if website.icon %}
-                <img src="{{ website.icon }}" alt="icon" onerror="this.style.display='none'" />
+              <img src="{{ website.icon }}" alt="{{ website.title }}" />
               {% else %}
-                <span class="default-site-icon"><i class="bi bi-globe"></i></span>
+              <div class="default-site-icon">
+                {{ website.title|first|upper }}
+              </div>
               {% endif %}
             </span>
             <span class="site-text">
               <span class="site-title">{{ website.title }}</span>
               {% if website.description %}
-                <span class="site-description">{{ website.description }}</span>
+              <span class="site-description">{{ website.description }}</span>
               {% endif %}
             </span>
           </div>
           {% if website.is_private %}
-            <span class="private-badge" title="私有链接"><i class="bi bi-lock-fill"></i></span>
+          <span class="private-badge" title="私有链接"><i class="bi bi-lock-fill"></i></span>
           {% endif %}
         </a>
         {% endfor %}
@@ -168,10 +171,12 @@ head %}
       {% if category.parent_id is none %}
       <div class="category-card mb-5" id="category-{{ category.id }}">
         <div class="d-flex align-items-center mb-3" style="gap: 10px;">
-          <span class="category-icon" style="background-color: {{ category.color or '#3498db' }}">
-            <i class="bi bi-{{ category.icon or 'folder' }}"></i>
-          </span>
-          <span class="fs-5 fw-bold">{{ category.name }}</span>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span class="category-icon" style="background-color: {{ category.color or '#3498db' }}">
+              <i class="bi bi-{{ category.icon or 'folder' }}"></i>
+            </span>
+            <span class="fs-5 fw-bold">{{ category.name }}</span>
+          </div>
         </div>
         {% set has_children = category.children.count() > 0 %}
         {% if has_children %}
@@ -179,15 +184,10 @@ head %}
           <li class="nav-item" role="presentation">
             <button class="nav-link active" id="tab-all-{{ category.id }}" data-bs-toggle="pill"
               data-bs-target="#tab-pane-all-{{ category.id }}" type="button" role="tab" aria-selected="true">
-              
               <span class="sidebar-menu-icon" style="margin-right:6px;">
                 {{ render_icon(category.icon or 'folder', category.color or '#3498db') }}
               </span>
               全部
-              <!-- <span class="badge rounded-pill bg-primary ms-1">
-                {{ category.website_list|length + (category.children|map(attribute='website_list')|map('length')|sum if
-                has_children else 0) }}
-              </span> -->
             </button>
           </li>
           {% for child in category.children %}
@@ -198,27 +198,31 @@ head %}
                 {{ render_icon(child.icon or 'folder', child.color or '#3498db') }}
               </span>
               {{ child.name }}
-              <!-- <span class="badge rounded-pill bg-secondary ms-1">{{ child.website_list|length }}</span> -->
             </button>
           </li>
           {% endfor %}
         </ul>
-        {% endif %}
         <div class="tab-content">
           <div class="tab-pane fade show active" id="tab-pane-all-{{ category.id }}" role="tabpanel">
             <div class="card-container">
               {% set all_websites = category.website_list[:] %}
               {% for child in category.children %}
-                {% set _ = all_websites.extend(child.website_list) %}
+              {% set _ = all_websites.extend(child.website_list) %}
               {% endfor %}
               {% set all_websites = all_websites|sort(attribute='sort_order', reverse=True) %}
-              {% if all_websites|length == 0 %}
-              <div class="no-website-tip">
+              {# 应用首页展示数量限制 #}
+              {% if category.display_limit is defined and category.display_limit > 0 %}
+              {% set display_websites = all_websites[:category.display_limit] %}
+              {% else %}
+              {% set display_websites = all_websites %}
+              {% endif %}
+              {% if display_websites|length == 0 %}
+              <div class="no-websites-message">
                 <i class="bi bi-emoji-frown"></i>
                 <div>还没有添加网站</div>
               </div>
               {% else %}
-              {% for website in all_websites %}
+              {% for website in display_websites %}
               {# 复用 site-card 结构 #}
               <a href="{% if settings.enable_transition %}{{ url_for('main.goto', website_id=website.id) }}{% else %}{{ url_for('main.site', id=website.id) }}{% endif %}"
                 class="site-card" data-id="{{ website.id }}" data-website-id="{{ website.id }}"
@@ -246,19 +250,38 @@ head %}
                 </div>
               </a>
               {% endfor %}
+              {# 主分类tab下显示主分类查看全部按钮 #}
+              {% set total_websites_count = category.total_count %}
+              {% for child in category.children %}
+              {% set total_websites_count = total_websites_count + child.total_count %}
+              {% endfor %}
+              {% if category.display_limit is defined and category.display_limit > 0 and total_websites_count > category.display_limit %}
+              <div class="w-100"></div> {# 强制换行 #}
+              <div class="mt-4 text-center w-100">
+                <a href="{{ url_for('main.category', id=category.id) }}" class="btn btn-primary btn-sm px-4 py-2 view-all-btn" target="_blank">
+                  查看全部 <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+              </div>
+              {% endif %}
               {% endif %}
             </div>
           </div>
           {% for child in category.children %}
           <div class="tab-pane fade" id="tab-pane-{{ child.id }}" role="tabpanel">
             <div class="card-container">
-              {% if child.website_list|length == 0 %}
-              <div class="no-website-tip">
+              {# 应用子分类的首页展示数量限制 #}
+              {% if child.display_limit is defined and child.display_limit > 0 %}
+              {% set display_child_websites = child.website_list[:child.display_limit] %}
+              {% else %}
+              {% set display_child_websites = child.website_list %}
+              {% endif %}
+              {% if display_child_websites|length == 0 %}
+              <div class="no-websites-message">
                 <i class="bi bi-emoji-frown"></i>
                 <div>还没有添加网站</div>
               </div>
               {% else %}
-              {% for website in child.website_list %}
+              {% for website in display_child_websites %}
               {# 复用 site-card 结构 #}
               <a href="{% if settings.enable_transition %}{{ url_for('main.goto', website_id=website.id) }}{% else %}{{ url_for('main.site', id=website.id) }}{% endif %}"
                 class="site-card" data-id="{{ website.id }}" data-website-id="{{ website.id }}"
@@ -286,11 +309,75 @@ head %}
                 </div>
               </a>
               {% endfor %}
+              {# 子分类tab下显示子分类查看全部按钮 #}
+              {% if child.display_limit is defined and child.display_limit > 0 and child.total_count > child.display_limit %}
+              <div class="w-100"></div> {# 强制换行 #}
+              <div class="mt-4 text-center w-100">
+                <a href="{{ url_for('main.category', id=child.id) }}" class="btn btn-primary btn-sm px-4 py-2 view-all-btn" target="_blank">
+                  查看全部 <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+              </div>
+              {% endif %}
               {% endif %}
             </div>
           </div>
           {% endfor %}
         </div>
+        {% else %}
+        {# 没有子分类的主分类，直接显示网站列表 #}
+        <div class="card-container">
+          {# 应用首页展示数量限制 #}
+          {% if category.display_limit is defined and category.display_limit > 0 %}
+          {% set display_websites = category.website_list[:category.display_limit] %}
+          {% else %}
+          {% set display_websites = category.website_list %}
+          {% endif %}
+          {% if display_websites|length == 0 %}
+          <div class="no-websites-message">
+            <i class="bi bi-emoji-frown"></i>
+            <div>还没有添加网站</div>
+          </div>
+          {% else %}
+          {% for website in display_websites %}
+          {# 复用 site-card 结构 #}
+          <a href="{% if settings.enable_transition %}{{ url_for('main.goto', website_id=website.id) }}{% else %}{{ url_for('main.site', id=website.id) }}{% endif %}"
+            class="site-card" data-id="{{ website.id }}" data-website-id="{{ website.id }}"
+            data-website-url="{{ website.url }}" data-sort="{{ website.sort_order|default(loop.index0*10) }}"
+            title="{{ website.description }}" data-bs-toggle="tooltip" data-bs-placement="bottom" target="_blank">
+            {% if website.is_private %}
+            <div class="private-badge" title="私有链接">
+              <i class="bi bi-lock-fill"></i>
+            </div>
+            {% endif %}
+            <div class="site-header">
+              <div class="site-icon">
+                {% if website.icon %}
+                <img src="{{ website.icon }}" alt="{{ website.title }}" />
+                {% else %}
+                <div class="default-site-icon">
+                  {{ website.title|first|upper }}
+                </div>
+                {% endif %}
+              </div>
+              <div class="site-text">
+                <h5 class="site-title">{{ website.title }}</h5>
+                <p class="site-description">{{ website.description|truncate(60) }}</p>
+              </div>
+            </div>
+          </a>
+          {% endfor %}
+          {# 没有子分类的主分类显示查看全部按钮 #}
+          {% if category.display_limit is defined and category.display_limit > 0 and category.total_count > category.display_limit %}
+          <div class="w-100"></div> {# 强制换行 #}
+          <div class="mt-4 text-center w-100">
+            <a href="{{ url_for('main.category', id=category.id) }}" class="btn btn-primary btn-sm px-4 py-2 view-all-btn" target="_blank">
+              查看全部 <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+          </div>
+          {% endif %}
+          {% endif %}
+        </div>
+        {% endif %}
       </div>
       {% endif %} {% endfor %}
     </div>

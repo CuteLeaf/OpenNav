@@ -88,12 +88,12 @@
         <div class="col-md-6">
           <div class="mb-3">
             {{ form.display_limit.label(class="form-label") }} {{
-            form.display_limit(class="form-control", type="number", min="1") }}
+            form.display_limit(class="form-control", type="number", min="0") }}
             {% for error in form.display_limit.errors %}
             <div class="text-danger small">{{ error }}</div>
             {% endfor %}
             <div class="form-text">
-              设置首页该分类显示的链接数量，推荐4-12之间，超过此数量会显示"查看全部"按钮
+              设置首页该分类显示的链接数量，超过此数量会显示"查看全部"按钮，如果为0则显示全部。
             </div>
           </div>
         </div>

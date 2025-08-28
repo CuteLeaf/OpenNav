@@ -10,7 +10,7 @@ class CategoryForm(FlaskForm):
     icon = StringField('图标', validators=[Length(max=64)])
     color = StringField('颜色', validators=[Length(max=16)])
     order = IntegerField('排序', default=0)
-    display_limit = IntegerField('首页展示数量', default=10)
+    display_limit = IntegerField('首页展示数量', default=0)
     parent_id = SelectField('父分类', coerce=int, validators=[Optional()])
     submit_btn = SubmitField('提交')
     
