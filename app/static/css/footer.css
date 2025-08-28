@@ -88,3 +88,34 @@ body:not(.bg-none) .footer .text-muted,
 body:not(.bg-none) .footer p.small {
   color: #b0b8c9 !important;
 }
+
+/* 页脚超链接样式 - 移除下划线和蓝色字体 */
+.footer a {
+  color: inherit !important;
+  text-decoration: none !important;
+  transition: opacity 0.3s ease;
+}
+
+.footer a:hover {
+  color: inherit !important;
+  text-decoration: none !important;
+  opacity: 0.8;
+}
+
+.footer a:focus,
+.footer a:active {
+  color: inherit !important;
+  text-decoration: none !important;
+}
+
+/* 确保在有背景模式下也保持一致 */
+body:not(.bg-none) .footer a {
+  color: #f3f3f3 !important;
+  text-decoration: none !important;
+}
+
+body:not(.bg-none) .footer a:hover {
+  color: #f3f3f3 !important;
+  text-decoration: none !important;
+  opacity: 0.8;
+}

@@ -61,7 +61,7 @@
                   href="{{ url_for('admin.delete_category', id=category.id) }}"
                   class="btn btn-action btn-delete"
                   title="删除分类"
-                  onclick="return confirm('确定要删除此分类吗？')"
+                  onclick="return confirmDeleteCategory('{{ category.name }}', {{ category.websites.count() }}, {{ category.children.count() }}, [{% for child in category.children %}{{ child.websites.count() }}{% if not loop.last %},{% endif %}{% endfor %}])"
                 >
                   <i class="bi bi-trash"></i>
                 </a>
@@ -105,7 +105,7 @@
                   href="{{ url_for('admin.delete_category', id=child.id) }}"
                   class="btn btn-action btn-delete"
                   title="删除分类"
-                  onclick="return confirm('确定要删除此分类吗？')"
+                  onclick="return confirmDeleteCategory('{{ child.name }}', {{ child.websites.count() }}, 0)"
                 >
                   <i class="bi bi-trash"></i>
                 </a>
@@ -127,4 +127,32 @@
     {% endif %}
   </div>
 </div>
+
+<script>
+function confirmDeleteCategory(categoryName, websiteCount, childCount, childWebsiteCounts = []) {
+  let message = `确定要删除分类"${categoryName}"吗？`;
+  
+  // 计算子分类下的总网站数量
+  let totalChildWebsites = childWebsiteCounts ? childWebsiteCounts.reduce((sum, count) => sum + count, 0) : 0;
+  
+  if (websiteCount > 0 && totalChildWebsites > 0) {
+    message = `分类"${categoryName}"下有 ${websiteCount} 个网站，其子分类下还有 ${totalChildWebsites} 个网站，无法删除！\n\n请先删除或移动所有网站。`;
+    alert(message);
+    return false;
+  } else if (websiteCount > 0) {
+    message = `分类"${categoryName}"下有 ${websiteCount} 个网站，无法删除！\n\n请先删除或移动所有网站。`;
+    alert(message);
+    return false;
+  } else if (totalChildWebsites > 0) {
+    message = `分类"${categoryName}"的子分类下有 ${totalChildWebsites} 个网站，无法删除！\n\n请先删除或移动子分类中的所有网站。`;
+    alert(message);
+    return false;
+  } else if (childCount > 0) {
+    message = `分类"${categoryName}"下有 ${childCount} 个子分类，删除时将一并删除所有子分类。\n\n确定要删除吗？`;
+    return confirm(message);
+  } else {
+    return confirm(message);
+  }
+}
+</script>
 {% endblock %}

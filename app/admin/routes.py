@@ -121,9 +121,30 @@ def edit_category(id):
 @admin_required
 def delete_category(id):
     category = Category.query.get_or_404(id)
-    if Website.query.filter_by(category_id=id).first():
-        flash('该分类下存在网站，无法删除', 'danger')
+    
+    # 检查当前分类下是否有网站
+    websites_count = Website.query.filter_by(category_id=id).count()
+    
+    # 检查子分类下是否有网站
+    child_websites_count = 0
+    child_categories = Category.query.filter_by(parent_id=id).all()
+    for child in child_categories:
+        child_websites_count += Website.query.filter_by(category_id=child.id).count()
+    
+    total_websites = websites_count + child_websites_count
+    
+    if total_websites > 0:
+        if websites_count > 0 and child_websites_count > 0:
+            flash(f'该分类下存在 {websites_count} 个网站，其子分类下还有 {child_websites_count} 个网站，无法删除', 'danger')
+        elif websites_count > 0:
+            flash(f'该分类下存在 {websites_count} 个网站，无法删除', 'danger')
+        else:
+            flash(f'该分类的子分类下存在 {child_websites_count} 个网站，无法删除', 'danger')
     else:
+        # 先删除子分类
+        for child in child_categories:
+            db.session.delete(child)
+        # 再删除主分类
         db.session.delete(category)
         db.session.commit()
         flash('分类删除成功', 'success')
