@@ -292,10 +292,14 @@ body:not(.bg-none) .category-card {
 
 .category-card .fs-5 {
   font-size: 1.35rem !important;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.01em;
   color: #3a2e7b;
-  text-shadow: 0 1px 0 #fff, 0 2px 8px rgba(112, 73, 240, 0.08);
+  text-shadow: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif;
 }
 
 /* pills横向滚动美化 */
