@@ -1,0 +1,78 @@
+/* 图标性能优化增强 - 不替换原有功能 */
+
+/* 字体加载优化 */
+@font-face {
+  font-family: "bootstrap-icons-optimized";
+  src: url("../vendor/bootstrap-icons/fonts/bootstrap-icons.woff2")
+    format("woff2");
+  font-display: swap;
+}
+
+/* 预加载关键图标 - 提高首屏渲染速度 */
+.bi-folder::before,
+.bi-search::before,
+.bi-arrow-up::before,
+.bi-arrow-down::before,
+.bi-arrow-left::before,
+.bi-arrow-right::before,
+.bi-person::before,
+.bi-star-fill::before,
+.bi-collection::before,
+.bi-list::before,
+.bi-pencil::before,
+.bi-trash::before,
+.bi-plus-circle::before,
+.bi-eye::before,
+.bi-lock::before,
+.bi-exclamation-circle::before,
+.bi-info-circle::before,
+.bi-check-circle::before,
+.bi-question-circle::before,
+.bi-chevron-down::before,
+.bi-globe::before,
+.bi-archive::before,
+.bi-download::before,
+.bi-x::before,
+.bi-tag::before,
+.bi-tags::before,
+.bi-link::before,
+.bi-card-text::before,
+.bi-clipboard::before,
+.bi-cloud-download::before,
+.bi-shield-lock::before,
+.bi-envelope-fill::before,
+.bi-github::before {
+  font-family: bootstrap-icons-optimized !important;
+}
+
+/* 图标选择器性能优化 */
+.icon-picker-container .bi::before {
+  font-family: bootstrap-icons !important; /* 确保选择器功能正常 */
+}
+
+/* 性能优化：延迟加载非关键图标 */
+@media (prefers-reduced-motion: no-preference) {
+  .bi::before {
+    transition: opacity 0.2s ease;
+  }
+}
+
+/* 图标加载状态 */
+.icon-loading {
+  opacity: 0.6;
+}
+
+.icon-loaded {
+  opacity: 1;
+}
+
+/* 关键图标预加载 */
+.critical-icons {
+  position: absolute;
+  left: -9999px;
+  visibility: hidden;
+}
+
+.critical-icons .bi {
+  font-size: 1px;
+}

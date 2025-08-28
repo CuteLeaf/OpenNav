@@ -776,3 +776,5 @@ textarea.modal-input {
     width: 44px;
   }
 }
+
+/* 图标加载状态样式 - 已移除，保留智能加载机制 */

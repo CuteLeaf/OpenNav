@@ -31,8 +31,9 @@ def index():
         )
     featured_sites = featured_sites_query.order_by(Website.views.desc()).limit(6).all()
     
-    # 预先加载每个分类下的网站，按照自定义排序顺序
+    # 预先加载每个分类下的网站，按照自定义排序顺序，添加limit限制提升性能
     for category in categories:
+        # 构建查询条件（用于权限过滤）
         websites_query = Website.query.filter_by(category_id=category.id)
         if not current_user.is_authenticated:
             websites_query = websites_query.filter_by(is_private=False)
@@ -42,11 +43,29 @@ def index():
                 (Website.created_by_id == current_user.id) |
                 (Website.visible_to.contains(str(current_user.id)))
             )
+        
+        # 计算该分类下的全部链接数量（用于显示）
+        category.total_count = websites_query.count()
+        
+        # 加载需要显示的链接（性能优化）
         category.website_list = websites_query.order_by(
             Website.sort_order.desc(),  # 改为降序，权重大的排在前面
             Website.created_at.asc(),
             Website.views.desc()
-        ).all()
+        ).limit(category.display_limit).all()  # 添加limit限制，只加载需要显示的链接数量
+        
+        # 为子分类计算链接数量
+        for child in category.children:
+            child_query = Website.query.filter_by(category_id=child.id)
+            if not current_user.is_authenticated:
+                child_query = child_query.filter_by(is_private=False)
+            elif not current_user.is_admin:
+                child_query = child_query.filter(
+                    (Website.is_private == False) |
+                    (Website.created_by_id == current_user.id) |
+                    (Website.visible_to.contains(str(current_user.id)))
+                )
+            child.total_count = child_query.count()
     
     # 获取站点设置
     settings = SiteSettings.get_settings()
@@ -86,12 +105,16 @@ def category(id):
     # 获取所有分类用于修改链接表单
     all_categories = Category.query.order_by(Category.order.desc()).all()
     
+    # 获取所有顶级分类用于侧边栏
+    categories = Category.query.filter_by(parent_id=None).order_by(Category.order.desc()).all()
+    
     # 相关分类信息
     context = {
         'title': category.name,
         'category': category,
         'websites': websites,
         'all_categories': all_categories,
+        'categories': categories,  # 添加categories用于侧边栏
         'highlight_id': highlight_id  # 添加高亮ID到上下文
     }
     

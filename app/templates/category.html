@@ -42,6 +42,14 @@ DEBUG - Settings信息:
 />
 <link
   rel="stylesheet"
+  href="{{ url_for('static', filename='css/sidebar.css') }}"
+/>
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/sidebar_submenu.css') }}"
+/>
+<link
+  rel="stylesheet"
   href="{{ url_for('static', filename='css/card.css') }}"
 />
 <link
@@ -380,9 +388,62 @@ DEBUG - Settings信息:
   }
 </style>
 {% endblock %} {% block content %} {# 顶部导航栏 #} {% include
-'common/navbar.html' %}
+'common/navbar.html' %} {# 遮罩层 #}
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-<div class="page-container">
+{# 侧边栏 #}
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-content">
+    {# 分类菜单 #}
+    <div class="sidebar-group">
+      <ul class="sidebar-menu">
+        {% for category in categories %} {% if category.parent_id is none %}
+        <li
+          class="sidebar-menu-item {% if category.children.count() > 0 %}has-submenu{% endif %}"
+        >
+          <a href="{{ url_for('main.category', id=category.id) }}" class="sidebar-menu-link">
+            <span class="sidebar-menu-icon">
+              {{ render_icon(category.icon or 'folder', category.color or
+              '#3498db') }}
+            </span>
+            {{ category.name }} {% if category.children.count() > 0 %}
+            <span class="category-children-count"
+              >{{ category.children.count() }}</span
+            >
+            <button class="submenu-toggle" tabindex="-1" aria-label="展开/收起">
+              <svg viewBox="0 0 24 24">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+            {% endif %}
+          </a>
+          {% if category.children.count() > 0 %}
+          <ul class="sidebar-submenu">
+            {% for child in category.children %}
+            <li class="sidebar-submenu-item">
+              <a
+                href="{{ url_for('main.category', id=child.id) }}"
+                class="sidebar-submenu-link"
+              >
+                <span class="sidebar-menu-icon">
+                  {{ render_icon(child.icon or 'folder', child.color or
+                  '#3498db') }}
+                </span>
+                {{ child.name }}
+              </a>
+            </li>
+            {% endfor %}
+          </ul>
+          {% endif %}
+        </li>
+        {% endif %} {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+
+{# 主内容区域 #}
+<div class="main-content" id="mainContent">
   <div class="content-container mt-4">
     <!-- 分类信息和搜索区域 -->
     <div class="category-card">
@@ -510,6 +571,7 @@ DEBUG - Settings信息:
       {% endfor %}
     </div>
   </div>
+</div>
 </div>
 
 {# 卡片右键菜单 #}
@@ -1007,4 +1069,7 @@ DEBUG - Settings信息:
     }
   });
 </script>
+
+<script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
+<script src="{{ url_for('static', filename='js/sidebar_submenu.js') }}"></script>
 {% endblock %}

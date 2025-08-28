@@ -133,6 +133,11 @@
       rel="stylesheet"
       href="{{ url_for('static', filename='vendor/font-awesome/css/solid.min.css') }}"
     />
+    <!-- 引入优化的图标CSS（性能增强） -->
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/icons-optimized.css') }}"
+    />
     <!-- 引入Bootstrap -->
     <link
       href="{{ url_for('static', filename='vendor/bootstrap/css/bootstrap.min.css') }}"
@@ -470,46 +475,365 @@
     <script>
       // 处理图标加载错误，所有页面都会执行这段代码
       document.addEventListener("DOMContentLoaded", function () {
-        // 为所有网站图标添加错误处理
-        function handleSiteImages() {
-          const siteImages = document.querySelectorAll(
-            ".site-icon img, .related-icon img"
-          );
-          siteImages.forEach((img) => {
-            img.onerror = function () {
-              const siteName = this.alt || "site";
-              const firstLetter = siteName.charAt(0).toUpperCase();
-              const parentEl = this.parentElement;
+        // 图标缓存管理
+        const iconCache = new Map();
+        const failedIcons = new Set();
+        const loadingIcons = new Map(); // 正在加载的图标状态
+        const loadedIcons = new Set(); // 已成功加载的图标
 
-              // 移除错误的图片
-              this.remove();
+        // 智能加载配置
+        const loadConfig = {
+          initialTimeout: 5000, // 初始超时5秒
+          retryTimeout: 3000, // 重试超时3秒
+          maxRetries: 2, // 最大重试次数
+          slowNetworkThreshold: 8000, // 慢网络阈值8秒
+          progressiveTimeout: true, // 启用渐进式超时
+        };
 
-              // 创建默认图标
-              const defaultIcon = document.createElement("div");
-              defaultIcon.className = "default-site-icon";
-              defaultIcon.textContent = firstLetter;
-              parentEl.appendChild(defaultIcon);
+        // 从localStorage恢复缓存状态
+        function restoreIconCache() {
+          try {
+            const savedCache = localStorage.getItem("iconCache");
+            const savedFailed = localStorage.getItem("failedIcons");
+            const savedLoaded = localStorage.getItem("loadedIcons");
+
+            if (savedCache) {
+              const cacheData = JSON.parse(savedCache);
+              cacheData.forEach(([url, timestamp]) => {
+                // 检查缓存是否过期（24小时）
+                if (Date.now() - timestamp < 24 * 60 * 60 * 1000) {
+                  iconCache.set(url, true);
+                }
+              });
+            }
+
+            if (savedFailed) {
+              const failedData = JSON.parse(savedFailed);
+              failedData.forEach((url) => {
+                // 检查失败记录是否过期（1小时）
+                if (Date.now() - url.timestamp < 60 * 60 * 1000) {
+                  failedIcons.add(url.url);
+                }
+              });
+            }
+
+            if (savedLoaded) {
+              const loadedData = JSON.parse(savedLoaded);
+              loadedData.forEach((url) => {
+                loadedIcons.add(url);
+              });
+            }
+          } catch (e) {
+            console.log("Failed to restore icon cache:", e);
+          }
+        }
+
+        // 保存缓存状态到localStorage
+        function saveIconCache() {
+          try {
+            const cacheData = Array.from(iconCache.entries()).map(
+              ([url, _]) => [url, Date.now()]
+            );
+            const failedData = Array.from(failedIcons).map((url) => ({
+              url,
+              timestamp: Date.now(),
+            }));
+            const loadedData = Array.from(loadedIcons);
+
+            localStorage.setItem("iconCache", JSON.stringify(cacheData));
+            localStorage.setItem("failedIcons", JSON.stringify(failedData));
+            localStorage.setItem("loadedIcons", JSON.stringify(loadedData));
+          } catch (e) {
+            console.log("Failed to save icon cache:", e);
+          }
+        }
+
+        // 创建Web Worker用于多线程图标加载
+        let iconWorker = null;
+        try {
+          const workerCode = `
+            // 图标加载Worker
+            self.onmessage = function(e) {
+              const { url, id } = e.data;
+              
+              // 使用fetch API加载图标
+              fetch(url, { 
+                method: 'HEAD',
+                mode: 'no-cors',
+                cache: 'force-cache'
+              })
+              .then(() => {
+                self.postMessage({ id, status: 'success', url });
+              })
+              .catch(() => {
+                self.postMessage({ id, status: 'error', url });
+              });
             };
+          `;
 
-            // 检查图片是否已经加载并且是有效图标
-            if (img.complete) {
-              validateImage(img);
-            } else {
-              img.onload = function () {
-                validateImage(this);
+          const blob = new Blob([workerCode], {
+            type: "application/javascript",
+          });
+          iconWorker = new Worker(URL.createObjectURL(blob));
+        } catch (e) {
+          console.log(
+            "Web Worker not supported, falling back to normal loading"
+          );
+        }
+
+        // 图标加载状态管理
+        const iconLoadStates = new Map();
+
+        // 检测网络速度
+        function detectNetworkSpeed() {
+          const startTime = performance.now();
+          return fetch("/static/images/favicon.ico", {
+            method: "HEAD",
+            cache: "no-cache",
+          })
+            .then(() => {
+              const endTime = performance.now();
+              const loadTime = endTime - startTime;
+              return {
+                isSlow: loadTime > loadConfig.slowNetworkThreshold,
+                loadTime: loadTime,
               };
+            })
+            .catch(() => ({ isSlow: true, loadTime: Infinity }));
+        }
+
+        // 智能超时计算
+        function getSmartTimeout(retryCount = 0, networkSpeed = null) {
+          if (networkSpeed && networkSpeed.isSlow) {
+            // 慢网络：增加超时时间
+            return loadConfig.initialTimeout * (1.5 + retryCount * 0.5);
+          }
+
+          if (loadConfig.progressiveTimeout) {
+            // 渐进式超时：根据重试次数调整
+            return (
+              loadConfig.initialTimeout + retryCount * loadConfig.retryTimeout
+            );
+          }
+
+          return loadConfig.initialTimeout;
+        }
+
+        // 预加载关键图标
+        function preloadCriticalIcons() {
+          const criticalIcons = [
+            // 添加需要预加载的关键图标URL
+          ];
+
+          criticalIcons.forEach((url) => {
+            if (!iconCache.has(url) && !failedIcons.has(url)) {
+              const img = new Image();
+              img.onload = () => iconCache.set(url, true);
+              img.onerror = () => failedIcons.add(url);
+              img.src = url;
             }
           });
         }
 
-        // 验证图片是否有效
+        // 智能图标加载函数
+        function loadIconWithCache(img, retryCount = 0) {
+          const url = img.src;
+          const imgId = Math.random().toString(36).substr(2, 9);
+
+          // 检查缓存 - 如果已成功加载过，直接跳过
+          if (iconCache.has(url) || loadedIcons.has(url)) {
+            return; // 已缓存，直接使用
+          }
+
+          // 检查失败记录
+          if (failedIcons.has(url)) {
+            // 如果之前失败过，但图片现在显示正常，则移除失败记录
+            if (img.complete && img.naturalWidth > 0 && img.naturalHeight > 0) {
+              failedIcons.delete(url);
+              loadedIcons.add(url);
+              saveIconCache();
+              return;
+            }
+            handleImageError(img);
+            return;
+          }
+
+          // 如果正在加载，不重复加载
+          if (loadingIcons.has(url)) {
+            return;
+          }
+
+          // 如果图片已经加载完成且有效，直接标记为成功
+          if (img.complete && img.naturalWidth > 0 && img.naturalHeight > 0) {
+            loadedIcons.add(url);
+            iconCache.set(url, true);
+            saveIconCache();
+            return;
+          }
+
+          // 标记为正在加载
+          loadingIcons.set(url, { retryCount, imgId });
+
+          // 检测网络速度并设置智能超时
+          detectNetworkSpeed().then((networkSpeed) => {
+            const timeout = getSmartTimeout(retryCount, networkSpeed);
+
+            console.log(
+              `Loading icon: ${url}, timeout: ${timeout}ms, retry: ${retryCount}, network: ${
+                networkSpeed.isSlow ? "slow" : "normal"
+              }`
+            );
+
+            // 设置加载超时
+            const timeoutId = setTimeout(() => {
+              loadingIcons.delete(url);
+
+              if (retryCount < loadConfig.maxRetries) {
+                console.log(
+                  `Icon timeout, retrying: ${url} (${retryCount + 1}/${
+                    loadConfig.maxRetries
+                  })`
+                );
+                // 重试加载
+                setTimeout(() => {
+                  loadIconWithCache(img, retryCount + 1);
+                }, 1000); // 1秒后重试
+              } else {
+                console.log(
+                  `Icon failed after ${loadConfig.maxRetries} retries: ${url}`
+                );
+                failedIcons.add(url);
+                saveIconCache();
+                handleImageError(img);
+              }
+            }, timeout);
+
+            img.onload = function () {
+              clearTimeout(timeoutId);
+              loadingIcons.delete(url);
+              iconCache.set(url, true);
+              loadedIcons.add(url);
+              saveIconCache();
+              console.log(`Icon loaded successfully: ${url}`);
+              validateImage(this);
+            };
+
+            img.onerror = function () {
+              clearTimeout(timeoutId);
+              loadingIcons.delete(url);
+
+              if (retryCount < loadConfig.maxRetries) {
+                console.log(
+                  `Icon error, retrying: ${url} (${retryCount + 1}/${
+                    loadConfig.maxRetries
+                  })`
+                );
+                // 重试加载
+                setTimeout(() => {
+                  loadIconWithCache(img, retryCount + 1);
+                }, 1000); // 1秒后重试
+              } else {
+                console.log(
+                  `Icon failed after ${loadConfig.maxRetries} retries: ${url}`
+                );
+                failedIcons.add(url);
+                saveIconCache();
+                handleImageError(this);
+              }
+            };
+          });
+        }
+
+        // 为所有网站图标添加错误处理和超时控制
+        function handleSiteImages() {
+          const siteImages = document.querySelectorAll(
+            ".site-icon img, .related-icon img"
+          );
+
+          siteImages.forEach((img) => {
+            const imgId = Math.random().toString(36).substr(2, 9);
+            iconLoadStates.set(imgId, { img, loaded: false });
+
+            // 使用优化的加载函数
+            loadIconWithCache(img);
+
+            // 检查图片是否已经加载并且是有效图标
+            if (img.complete) {
+              validateImage(img);
+              iconLoadStates.set(imgId, { img, loaded: true });
+            }
+
+            // 使用Worker预加载图标（如果支持）
+            if (iconWorker && img.src && !iconCache.has(img.src)) {
+              iconWorker.postMessage({ url: img.src, id: imgId });
+            }
+          });
+        }
+
+        // 处理Worker消息
+        if (iconWorker) {
+          iconWorker.onmessage = function (e) {
+            const { id, status, url } = e.data;
+            const state = iconLoadStates.get(id);
+
+            if (state && !state.loaded) {
+              if (status === "error") {
+                failedIcons.add(url);
+              }
+            }
+          };
+        }
+
+        // 统一的错误处理函数
+        function handleImageError(img) {
+          const siteName = img.alt || "site";
+          const firstLetter = siteName.charAt(0).toUpperCase();
+          const parentEl = img.parentElement;
+
+          // 移除错误的图片
+          img.remove();
+
+          // 创建默认图标
+          const defaultIcon = document.createElement("div");
+          defaultIcon.className = "default-site-icon";
+          defaultIcon.textContent = firstLetter;
+          parentEl.appendChild(defaultIcon);
+        }
+
+        // 验证图片是否有效 - 更智能的验证
         function validateImage(img) {
+          const url = img.src;
+
+          // 如果图片已经成功加载过，不要轻易判定为无效
+          if (loadedIcons.has(url) || iconCache.has(url)) {
+            return;
+          }
+
+          // 检查图片尺寸
           if (img.naturalWidth === 0 || img.naturalHeight === 0) {
-            img.onerror();
+            // 给图片一点时间，可能是延迟加载
+            setTimeout(() => {
+              if (img.naturalWidth === 0 || img.naturalHeight === 0) {
+                console.log(`Icon validation failed: ${url}`);
+                handleImageError(img);
+              } else {
+                // 图片最终加载成功
+                loadedIcons.add(url);
+                iconCache.set(url, true);
+                saveIconCache();
+              }
+            }, 1000);
+          } else {
+            // 图片有效，记录成功
+            loadedIcons.add(url);
+            iconCache.set(url, true);
+            saveIconCache();
           }
         }
 
         // 初始化图片处理
+        restoreIconCache(); // 恢复缓存状态
+        preloadCriticalIcons();
         handleSiteImages();
 
         // 监听动态加载的内容
@@ -525,6 +849,13 @@
         observer.observe(document.body, {
           childList: true,
           subtree: true,
+        });
+
+        // 页面卸载时清理Worker
+        window.addEventListener("beforeunload", function () {
+          if (iconWorker) {
+            iconWorker.terminate();
+          }
         });
       });
     </script>
