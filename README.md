@@ -143,7 +143,7 @@ version: "3"
 
 services:
   nav:
-    image: cuteleaf/book-nav:2.0.1
+    image: cuteleaf/book-nav:2.0.2
     container_name: nav
     restart: always
     ports:
