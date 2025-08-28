@@ -41,10 +41,11 @@ COPY docker/nginx.conf /defaults/nginx.conf
 # 配置Supervisor
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# 添加启动脚本并设置执行权限
+# 添加启动脚本并设置执行权限，并转换换行符为LF，防止Windows开发环境带入CRLF
 COPY docker/entrypoint.sh /entrypoint.sh
 COPY docker/cleanup_backups.sh /app/docker/cleanup_backups.sh
-RUN chmod +x /entrypoint.sh /app/docker/cleanup_backups.sh
+RUN sed -i 's/\r$//' /entrypoint.sh /app/docker/cleanup_backups.sh \
+    && chmod +x /entrypoint.sh /app/docker/cleanup_backups.sh
 
 # 复制应用代码（放在最后以利用缓存）
 COPY . .

@@ -7,7 +7,8 @@
     settings.footer_content|safe }} {% else %}
     <p class="mb-0 text-center">
       © {{ year|default(2025) }} {% if settings %}{{ settings.site_name }}{%
-      else %}炫酷导航{% endif %}
+      else %}OpenNav{% endif %}
+      Powered by <a target="_blank" href="https://github.com/CuteLeaf/OpenNav" title="免费开源的书签导航管理工具" rel="nofollow">OpenNav</a>.
     </p>
     <p class="mb-0 small text-muted text-center">由Python + Flask强力驱动</p>
     {% endif %}

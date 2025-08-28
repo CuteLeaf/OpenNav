@@ -172,7 +172,7 @@ class Website(db.Model):
 
 class SiteSettings(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    site_name = db.Column(db.String(128), default="炫酷导航")
+    site_name = db.Column(db.String(128), default="OpenNav")
     site_logo = db.Column(db.String(256), nullable=True)  # 存储logo图片URL
     site_favicon = db.Column(db.String(256), nullable=True)  # 存储网站图标URL
     site_subtitle = db.Column(db.String(256), nullable=True)

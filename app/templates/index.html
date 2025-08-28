@@ -135,9 +135,9 @@ head %}
       <div class="card-container">
         {% set sorted_recommended = recommended_websites|sort(attribute='sort_order', reverse=True) %}
         {% for website in sorted_recommended %}
-        <a href="{% if settings.enable_transition %}{{ url_for('main.goto', website_id=website.id) }}{% else %}{{ url_for('main.site', id=website.id) }}{% endif %}"
-           class="site-card" data-id="{{ website.id }}" data-website-id="{{ website.id }}"
-           data-website-url="{{ website.url }}" data-sort="{{ website.sort_order|default(loop.index0*10) }}">
+  <a href="{% if settings.enable_transition %}{{ url_for('main.goto', website_id=website.id) }}{% else %}{{ url_for('main.site', id=website.id) }}{% endif %}"
+     class="site-card" data-id="{{ website.id }}" data-website-id="{{ website.id }}"
+     data-website-url="{{ website.url }}" data-sort="{{ website.sort_order|default(loop.index0*10) }}" target="_blank">
           <div class="site-header">
             <span class="site-icon">
               {% if website.icon %}
@@ -179,6 +179,10 @@ head %}
           <li class="nav-item" role="presentation">
             <button class="nav-link active" id="tab-all-{{ category.id }}" data-bs-toggle="pill"
               data-bs-target="#tab-pane-all-{{ category.id }}" type="button" role="tab" aria-selected="true">
+              
+              <span class="sidebar-menu-icon" style="margin-right:6px;">
+                {{ render_icon(category.icon or 'folder', category.color or '#3498db') }}
+              </span>
               全部
               <!-- <span class="badge rounded-pill bg-primary ms-1">
                 {{ category.website_list|length + (category.children|map(attribute='website_list')|map('length')|sum if

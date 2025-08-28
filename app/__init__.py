@@ -69,7 +69,7 @@ def create_app(config_class=Config):
             print(f"无法获取站点设置: {str(e)}")
             # 创建一个临时设置对象，包含基本默认值
             default_settings = type('DefaultSettings', (), {
-                'site_name': '炫酷导航',
+                'site_name': 'OpenNav',
                 'site_logo': None,
                 'site_favicon': None,
                 'site_subtitle': '',
