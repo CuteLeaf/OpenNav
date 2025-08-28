@@ -1,6 +1,8 @@
-# BookNav - 高度可定制的个人导航网站
+# OpenNav - 高度可定制的个人导航网站
 
-BookNav 是一个使用 Flask 构建的、可通过 Docker 轻松部署的个人导航网站项目。它旨在帮助用户整理和快速访问常用的网站链接，提供分类管理和丰富的交互功能，并支持邀请码注册系统来控制用户访问。
+OpenNav 是一个使用 Flask 构建的、可通过 Docker 轻松部署的个人导航网站项目。它旨在帮助用户整理和快速访问常用的网站链接，提供分类管理和丰富的交互功能，并支持邀请码注册系统来控制用户访问。
+
+- 基于[book-nav](https://github.com/DEKVIW/book-nav)二次开发，在此感谢[DEKVIW](https://github.com/DEKVIW)的开源！
 
 ![首页](./img/首页.png)
 
@@ -12,7 +14,7 @@ BookNav 是一个使用 Flask 构建的、可通过 Docker 轻松部署的个人
 
 ## ✨ 特色功能
 
-BookNav 基于 Flask Web 框架打造，提供了以下核心功能：
+OpenNav 基于 Flask Web 框架打造，提供了以下核心功能：
 
 ### 🧰 交互增强功能
 
