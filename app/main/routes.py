@@ -1433,3 +1433,52 @@ def get_category_websites(category_id):
             "is_private": bool(getattr(w, 'is_private', False))
         })
     return jsonify({"websites": result})
+
+@bp.route('/api/website/<int:id>/toggle-featured', methods=['POST'])
+@login_required
+def toggle_website_featured(id):
+    """切换网站推荐状态"""
+    # 检查当前用户是否为管理员
+    if not current_user.is_admin:
+        return jsonify({
+            'success': False,
+            'message': '权限不足'
+        }), 403
+    
+    # 获取要修改的网站
+    website = Website.query.get_or_404(id)
+    
+    # 记录修改前的状态
+    old_is_featured = website.is_featured
+    
+    # 切换推荐状态
+    website.is_featured = not website.is_featured
+    
+    try:
+        # 保存更改
+        db.session.commit()
+        
+        # 记录操作日志
+        from app.models import OperationLog
+        log = OperationLog(
+            user_id=current_user.id,
+            operation_type='update_website',
+            website_id=website.id,
+            website_title=website.title,
+            website_url=website.url,
+            details=f'{"设置" if website.is_featured else "取消"}推荐网站: {website.title}'
+        )
+        db.session.add(log)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'已{"设置" if website.is_featured else "取消"}推荐',
+            'is_featured': website.is_featured
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': f'操作失败: {str(e)}'
+        }), 500

@@ -29,6 +29,31 @@ head %}
   .btn-primary:hover {
     background: linear-gradient(135deg, #5900b3 0%, #1a68e0 100%);
   }
+  .back-home-btn {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 1px solid #dee2e6;
+    color: #6c757d;
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+  .back-home-btn:hover {
+    background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    color: #495057;
+    text-decoration: none;
+  }
+  .back-home-btn i {
+    font-size: 1rem;
+  }
 </style>
 {% endblock %} {% block content %}
 <div class="login-container animate__animated animate__fadeIn">
@@ -65,6 +90,11 @@ head %}
       <p class="mb-2">还没有账户？</p>
       <a href="{{ url_for('auth.register') }}" class="btn btn-outline-primary">
         <i class="bi bi-person-plus me-1"></i>立即注册
+      </a>
+    </div>
+    <div class="text-center mt-3 pt-3 border-top">
+      <a href="{{ url_for('main.index') }}" class="back-home-btn">
+        <i class="bi bi-house"></i> 返回首页
       </a>
     </div>
   </div>

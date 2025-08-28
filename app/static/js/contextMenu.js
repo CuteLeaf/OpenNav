@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const addLinkBtn = document.getElementById("addLink");
   const shareSiteBtn = document.getElementById("shareSite");
   const deleteLinkBtn = document.getElementById("deleteLink");
+  const toggleFeaturedBtn = document.getElementById("toggleFeatured");
 
   // 添加卡片右键菜单功能
   document.addEventListener("contextmenu", function (e) {
@@ -17,6 +18,21 @@ document.addEventListener("DOMContentLoaded", function () {
 
       // 保存当前操作的卡片
       window.currentCard = e.target.closest(".site-card");
+
+      // 更新推荐按钮状态
+      if (toggleFeaturedBtn) {
+        const isFeatured = window.currentCard.getAttribute('data-featured') === 'true';
+        const featuredIcon = toggleFeaturedBtn.querySelector('i');
+        const featuredText = document.getElementById('featuredText');
+        
+        if (isFeatured) {
+          featuredIcon.className = 'bi bi-star-fill';
+          featuredText.textContent = '取消推荐';
+        } else {
+          featuredIcon.className = 'bi bi-star';
+          featuredText.textContent = '设置推荐';
+        }
+      }
 
       // 显示自定义右键菜单
       contextMenu.style.display = "block";
@@ -29,6 +45,69 @@ document.addEventListener("DOMContentLoaded", function () {
   document.addEventListener("click", function () {
     contextMenu.style.display = "none";
   });
+
+  // 推荐/取消推荐按钮点击事件
+  if (toggleFeaturedBtn) {
+    toggleFeaturedBtn.addEventListener("click", function () {
+      if (window.currentCard) {
+        // 隐藏上下文菜单
+        contextMenu.style.display = "none";
+
+        const cardId = window.currentCard.getAttribute('data-id');
+        const isFeatured = window.currentCard.getAttribute('data-featured') === 'true';
+        const cardTitle = window.currentCard.querySelector(".site-title").textContent;
+
+        // 添加加载状态
+        window.currentCard.style.opacity = "0.7";
+        window.currentCard.style.pointerEvents = "none";
+
+        // 发送切换推荐状态请求
+        fetch(`/api/website/${cardId}/toggle-featured`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": document.querySelector('meta[name="csrf-token"]')
+              ?.content || "",
+          },
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            // 恢复卡片状态
+            window.currentCard.style.opacity = "1";
+            window.currentCard.style.pointerEvents = "auto";
+
+            if (data.success) {
+              // 更新卡片的data-featured属性
+              window.currentCard.setAttribute('data-featured', data.is_featured);
+              
+              // 显示成功提示
+              showCopyToast(data.message);
+
+              // 如果当前页面是首页且该网站被设为推荐，可能需要刷新推荐区域
+              // 这里暂时不做复杂的DOM操作，可以考虑简单刷新页面或者添加到推荐区域
+              if (data.is_featured && document.getElementById('recommended-section')) {
+                // 可以选择刷新页面来显示最新的推荐状态
+                // location.reload();
+              }
+            } else {
+              // 显示错误提示
+              showCopyToast(
+                "操作失败: " + (data.message || "未知错误"),
+                "error"
+              );
+            }
+          })
+          .catch((error) => {
+            // 恢复卡片状态
+            window.currentCard.style.opacity = "1";
+            window.currentCard.style.pointerEvents = "auto";
+
+            console.error("切换推荐状态出错:", error);
+            showCopyToast("操作失败，请重试", "error");
+          });
+      }
+    });
+  }
 
   // 访问链接按钮点击事件
   visitLinkBtn.addEventListener("click", function () {

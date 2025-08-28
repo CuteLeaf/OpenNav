@@ -27,7 +27,7 @@
 
 /* 有背景时增加卡片不透明度和模糊效果 */
 body:not(.bg-none) .site-card {
-  background-color: rgba(255, 255, 255, 0.7);
+  background-color: rgba(255, 255, 255, 0.5);
   backdrop-filter: blur(5px);
   -webkit-backdrop-filter: blur(5px);
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
@@ -237,4 +237,40 @@ body:not(.bg-none) .site-card:hover {
 
 .private-badge i {
   font-size: 14px;
+}
+
+/* 推荐网站卡片样式 */
+.site-card[data-featured="true"] {
+  position: relative;
+}
+
+.site-card[data-featured="true"]::after {
+  content: "\f586"; /* Bootstrap Icons star-fill */
+  font-family: "bootstrap-icons";
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: linear-gradient(45deg, #ffd700, #ffed4e);
+  color: #fff;
+  font-size: 12px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  text-align: center;
+  line-height: 20px;
+  z-index: 3;
+  box-shadow: 0 2px 4px rgba(255, 215, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+.site-card[data-featured="true"]:hover::after {
+  transform: scale(1.1);
+  box-shadow: 0 3px 6px rgba(255, 215, 0, 0.4);
+}
+
+/* 确保推荐标记和私有标记不重叠 */
+.site-card[data-featured="true"] .private-badge {
+  top: 8px;
+  left: 8px;
+  right: auto;
 }
