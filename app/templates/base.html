@@ -116,8 +116,11 @@
     {% endif %}
 
     <title>
-      {% if title %}{{ title }} - {% endif %}{% if settings %}{{
-      settings.site_name }}{% else %}OpenNav{% endif %}
+      {% if request.endpoint == 'main.index' %}
+        {% if settings %}{{ settings.site_name }}{% if settings.site_subtitle %} - {{ settings.site_subtitle }}{% endif %}{% else %}OpenNav{% endif %}
+      {% else %}
+        {% if title %}{{ title }} - {% endif %}{% if settings %}{{ settings.site_name }}{% else %}OpenNav{% endif %}
+      {% endif %}
     </title>
     <!-- 引入字体图标-->
     <link
