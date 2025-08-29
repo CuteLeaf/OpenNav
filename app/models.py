@@ -79,7 +79,8 @@ class Category(db.Model):
     # 关系定义
     children = db.relationship('Category', 
                               backref=db.backref('parent', remote_side=[id]),
-                              lazy='dynamic')
+                              lazy='dynamic',
+                              order_by='Category.order.desc()')
     websites = db.relationship('Website', backref='category', lazy='dynamic')
     
     def __repr__(self):
