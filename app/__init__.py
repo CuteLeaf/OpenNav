@@ -116,6 +116,20 @@ def create_app(config_class=Config):
     def boolstr(value):
         return '是' if value else '否'
     
+    @app.template_filter('clean_url')
+    def clean_url(url):
+        """清理URL，移除默认端口号"""
+        if not url:
+            return url
+        # 移除默认端口
+        url = url.replace(':443/', '/').replace(':80/', '/')
+        # 移除末尾的默认端口
+        if url.endswith(':443'):
+            url = url[:-4]
+        elif url.endswith(':80'):
+            url = url[:-3]
+        return url
+    
     return app
 
 from app import models 

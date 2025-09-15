@@ -116,8 +116,8 @@
     {% endif %}
     
     <!-- SEO优化链接 -->
-    <link rel="canonical" href="{{ request.url }}" />
-    <link rel="alternate" type="application/rss+xml" title="{{ settings.site_name if settings else 'OpenNav' }} RSS" href="{{ url_for('main.index', _external=True) }}" />
+    <link rel="canonical" href="{{ url_for(request.endpoint, _external=True, **request.view_args)|clean_url }}" />
+    <link rel="alternate" type="application/rss+xml" title="{{ settings.site_name if settings else 'OpenNav' }} RSS" href="{{ url_for('main.index', _external=True)|clean_url }}" />
 
     <title>
       {% if request.endpoint == 'main.index' %}

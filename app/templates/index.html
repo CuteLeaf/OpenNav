@@ -13,20 +13,20 @@
 
 <!-- Open Graph / Facebook -->
 <meta property="og:type" content="website" />
-<meta property="og:url" content="{{ request.url }}" />
+<meta property="og:url" content="{{ url_for('main.index', _external=True)|clean_url }}" />
 <meta property="og:title" content="{{ settings.site_name }}{% if settings.site_subtitle %} - {{ settings.site_subtitle }}{% endif %}" />
 <meta property="og:description" content="{% if settings.site_description %}{{ settings.site_description }}{% else %}{{ settings.site_name }} - 精选网站导航，发现优质网站资源{% endif %}" />
 {% if settings.site_favicon %}
-<meta property="og:image" content="{{ url_for('static', filename='images/favicon.ico', _external=True) if not settings.site_favicon else settings.site_favicon }}" />
+<meta property="og:image" content="{{ settings.site_favicon if settings.site_favicon.startswith('http') else url_for('static', filename='images/favicon.ico', _external=True)|clean_url }}" />
 {% endif %}
 
 <!-- Twitter -->
 <meta property="twitter:card" content="summary_large_image" />
-<meta property="twitter:url" content="{{ request.url }}" />
+<meta property="twitter:url" content="{{ url_for('main.index', _external=True)|clean_url }}" />
 <meta property="twitter:title" content="{{ settings.site_name }}{% if settings.site_subtitle %} - {{ settings.site_subtitle }}{% endif %}" />
 <meta property="twitter:description" content="{% if settings.site_description %}{{ settings.site_description }}{% else %}{{ settings.site_name }} - 精选网站导航，发现优质网站资源{% endif %}" />
 {% if settings.site_favicon %}
-<meta property="twitter:image" content="{{ url_for('static', filename='images/favicon.ico', _external=True) if not settings.site_favicon else settings.site_favicon }}" />
+<meta property="twitter:image" content="{{ settings.site_favicon if settings.site_favicon.startswith('http') else url_for('static', filename='images/favicon.ico', _external=True)|clean_url }}" />
 {% endif %}
 
 <!-- 结构化数据 -->
@@ -36,13 +36,13 @@
   "@type": "WebSite",
   "name": "{{ settings.site_name or 'OpenNav' }}",
   {% if settings.site_subtitle %}"alternateName": "{{ settings.site_subtitle }}",{% endif %}
-  "url": "{{ request.url_root }}",
+  "url": "{{ url_for('main.index', _external=True)|clean_url }}",
   {% if settings.site_description %}"description": "{{ settings.site_description }}",{% endif %}
   "potentialAction": {
     "@type": "SearchAction",
     "target": {
       "@type": "EntryPoint",
-      "urlTemplate": "{{ request.url_root }}search?q={search_term_string}"
+      "urlTemplate": "{{ url_for('main.index', _external=True)|clean_url }}search?q={search_term_string}"
     },
     "query-input": "required name=search_term_string"
   }

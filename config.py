@@ -29,3 +29,7 @@ class Config:
     # CSRF令牌配置
     WTF_CSRF_TIME_LIMIT = 24 * 60 * 60  # CSRF令牌有效期24小时（秒）
     WTF_CSRF_SSL_STRICT = False  # 不强制要求HTTPS 
+    
+    # URL配置 - 用于解决代理服务器端口显示问题
+    PREFERRED_URL_SCHEME = os.environ.get('PREFERRED_URL_SCHEME') or 'https'
+    SERVER_NAME = os.environ.get('SERVER_NAME')  # 例如: 'www.twoleaf.cn' 
