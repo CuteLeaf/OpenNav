@@ -4,11 +4,13 @@ from app import db, csrf
 from app.main import bp
 from app.models import Category, Website, OperationLog, SiteSettings
 from app.main.forms import SearchForm, WebsiteForm
+from app.main.sitemap import generate_sitemap, generate_robots_txt
 from datetime import datetime, timedelta
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 import time
+import xml.etree.ElementTree as ET
 from sqlalchemy import or_
 import json
 import threading
@@ -91,7 +93,6 @@ def index():
     settings = SiteSettings.get_settings()
     
     return render_template('index.html', 
-                           title='首页', 
                            categories=categories, 
                            featured_sites=featured_sites,
                            settings=settings)
@@ -1482,3 +1483,33 @@ def toggle_website_featured(id):
             'success': False,
             'message': f'操作失败: {str(e)}'
         }), 500
+
+
+@bp.route('/sitemap.xml')
+def sitemap():
+    """生成网站地图"""
+    try:
+        sitemap_xml = generate_sitemap()
+        # 将XML树转换为字符串
+        from io import StringIO
+        output = StringIO()
+        sitemap_xml.write(output, encoding='unicode', xml_declaration=True)
+        xml_content = output.getvalue()
+        
+        response = Response(xml_content, mimetype='application/xml')
+        response.headers['Content-Type'] = 'application/xml; charset=utf-8'
+        return response
+    except Exception as e:
+        abort(500)
+
+
+@bp.route('/robots.txt')
+def robots():
+    """生成robots.txt"""
+    try:
+        robots_content = generate_robots_txt()
+        response = Response(robots_content, mimetype='text/plain')
+        response.headers['Content-Type'] = 'text/plain; charset=utf-8'
+        return response
+    except Exception as e:
+        abort(500)

@@ -1,11 +1,56 @@
-{% extends "base.html" %} {# 定义图标渲染宏 #} {% macro
-render_icon(icon_name='folder', color='#3498db') %} {% if
-icon_name.startswith('fa ') or icon_name.startswith('fas ') %}
-<i class="{{ icon_name }}" {% if color %}style="color: {{ color }}" {% endif %}></i>
-{% else %}
-<i class="bi bi-{{ icon_name }}" {% if color %}style="color: {{ color }}" {% endif %}></i>
-{% endif %} {% endmacro %} {% block page_type %}index{% endblock %} {% block
-head %}
+{% extends "base.html" %} 
+
+{# SEO优化 #}
+{% block head %}
+<!-- SEO 元标签 -->
+{% if settings %}
+<meta name="description" content="{% if settings.site_description %}{{ settings.site_description }}{% else %}{{ settings.site_name }} - 精选网站导航，发现优质网站资源{% endif %}" />
+<meta name="keywords" content="{% if settings.site_keywords %}{{ settings.site_keywords }}{% else %}导航,网站导航,网址大全,网站收藏,书签导航{% endif %}" />
+<meta name="author" content="{{ settings.site_name or 'OpenNav' }}" />
+<meta name="robots" content="index,follow" />
+<meta name="googlebot" content="index,follow" />
+<meta name="bingbot" content="index,follow" />
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website" />
+<meta property="og:url" content="{{ request.url }}" />
+<meta property="og:title" content="{{ settings.site_name }}{% if settings.site_subtitle %} - {{ settings.site_subtitle }}{% endif %}" />
+<meta property="og:description" content="{% if settings.site_description %}{{ settings.site_description }}{% else %}{{ settings.site_name }} - 精选网站导航，发现优质网站资源{% endif %}" />
+{% if settings.site_favicon %}
+<meta property="og:image" content="{{ url_for('static', filename='images/favicon.ico', _external=True) if not settings.site_favicon else settings.site_favicon }}" />
+{% endif %}
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image" />
+<meta property="twitter:url" content="{{ request.url }}" />
+<meta property="twitter:title" content="{{ settings.site_name }}{% if settings.site_subtitle %} - {{ settings.site_subtitle }}{% endif %}" />
+<meta property="twitter:description" content="{% if settings.site_description %}{{ settings.site_description }}{% else %}{{ settings.site_name }} - 精选网站导航，发现优质网站资源{% endif %}" />
+{% if settings.site_favicon %}
+<meta property="twitter:image" content="{{ url_for('static', filename='images/favicon.ico', _external=True) if not settings.site_favicon else settings.site_favicon }}" />
+{% endif %}
+
+<!-- 结构化数据 -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "{{ settings.site_name or 'OpenNav' }}",
+  {% if settings.site_subtitle %}"alternateName": "{{ settings.site_subtitle }}",{% endif %}
+  "url": "{{ request.url_root }}",
+  {% if settings.site_description %}"description": "{{ settings.site_description }}",{% endif %}
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": {
+      "@type": "EntryPoint",
+      "urlTemplate": "{{ request.url_root }}search?q={search_term_string}"
+    },
+    "query-input": "required name=search_term_string"
+  }
+}
+</script>
+{% endif %}
+
+<!-- 页面特定样式 -->
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Poppins:wght@500;600&display=swap"
@@ -20,8 +65,42 @@ head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/search.css') }}" />
 <link rel="stylesheet" href="{{ url_for('static', filename='css/modal.css') }}" />
 <link rel="stylesheet" href="{{ url_for('static', filename='css/contextMenu.css') }}" />
-{% endblock %} {% block content %} {# 顶部导航栏 #} {% include
-'common/navbar.html' %} {# 遮罩层 #}
+{% endblock %} 
+
+{# 定义图标渲染宏 #} 
+{% macro render_icon(icon_name='folder', color='#3498db') %} 
+{% if icon_name.startswith('fa ') or icon_name.startswith('fas ') %}
+<i class="{{ icon_name }}" {% if color %}style="color: {{ color }}" {% endif %}></i>
+{% else %}
+<i class="bi bi-{{ icon_name }}" {% if color %}style="color: {{ color }}" {% endif %}></i>
+{% endif %} 
+{% endmacro %} 
+
+{% block page_type %}index{% endblock %} 
+
+{% block content %} 
+<!-- 添加隐藏的SEO内容 -->
+{% if settings %}
+<div style="display: none;">
+  <h1>{{ settings.site_name }}{% if settings.site_subtitle %} - {{ settings.site_subtitle }}{% endif %}</h1>
+  {% if settings.site_description %}
+  <p>{{ settings.site_description }}</p>
+  {% endif %}
+  <!-- 分类关键词 -->
+  <div>
+    {% for category in categories %}
+    {% if category.parent_id is none %}
+    <span>{{ category.name }}导航</span>
+    {% for child in category.children %}
+    <span>{{ child.name }}</span>
+    {% endfor %}
+    {% endif %}
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{# 顶部导航栏 #} {% include 'common/navbar.html' %} {# 遮罩层 #}
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
 {# 侧边栏 #}
