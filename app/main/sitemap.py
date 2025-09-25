@@ -6,6 +6,27 @@ from flask import url_for, request
 from app.models import Category, Website, SiteSettings
 from datetime import datetime
 import xml.etree.ElementTree as ET
+from urllib.parse import urlsplit, urlunsplit
+
+
+def _normalize_url(raw: str) -> str:
+    """移除URL中的默认端口，避免出现 http://host:443 或 https://host:80。
+    同时对于 http:443/https:80 的错误端口也统一去掉端口。
+    """
+    if not raw:
+        return raw
+    try:
+        parts = urlsplit(raw)
+        scheme, netloc = parts.scheme, parts.netloc
+        if ':' in netloc:
+            host, port = netloc.rsplit(':', 1)
+            # 去掉默认端口或明显不匹配的端口
+            if (scheme == 'http' and port in ('80', '443')) or (scheme == 'https' and port in ('443', '80')):
+                netloc = host
+        return urlunsplit((scheme, netloc, parts.path, parts.query, parts.fragment))
+    except Exception:
+        # 兜底：简单替换
+        return raw.replace(':443/', '/').replace(':80/', '/')
 
 
 def generate_sitemap():
@@ -18,7 +39,7 @@ def generate_sitemap():
     
     # 添加首页
     url_elem = ET.SubElement(urlset, 'url')
-    ET.SubElement(url_elem, 'loc').text = url_for('main.index', _external=True)
+    ET.SubElement(url_elem, 'loc').text = _normalize_url(url_for('main.index', _external=True))
     ET.SubElement(url_elem, 'lastmod').text = datetime.now().strftime('%Y-%m-%d')
     ET.SubElement(url_elem, 'changefreq').text = 'daily'
     ET.SubElement(url_elem, 'priority').text = '1.0'
@@ -28,7 +49,7 @@ def generate_sitemap():
     for category in categories:
         # 主分类页面
         url_elem = ET.SubElement(urlset, 'url')
-        ET.SubElement(url_elem, 'loc').text = url_for('main.category', id=category.id, _external=True)
+    ET.SubElement(url_elem, 'loc').text = _normalize_url(url_for('main.category', id=category.id, _external=True))
         ET.SubElement(url_elem, 'lastmod').text = datetime.now().strftime('%Y-%m-%d')
         ET.SubElement(url_elem, 'changefreq').text = 'weekly'
         ET.SubElement(url_elem, 'priority').text = '0.8'
@@ -36,7 +57,7 @@ def generate_sitemap():
         # 子分类页面
         for child in category.children:
             url_elem = ET.SubElement(urlset, 'url')
-            ET.SubElement(url_elem, 'loc').text = url_for('main.category', id=child.id, _external=True)
+            ET.SubElement(url_elem, 'loc').text = _normalize_url(url_for('main.category', id=child.id, _external=True))
             ET.SubElement(url_elem, 'lastmod').text = datetime.now().strftime('%Y-%m-%d')
             ET.SubElement(url_elem, 'changefreq').text = 'weekly'
             ET.SubElement(url_elem, 'priority').text = '0.7'
@@ -45,7 +66,7 @@ def generate_sitemap():
     public_websites = Website.query.filter_by(is_private=False).all()
     for website in public_websites:
         url_elem = ET.SubElement(urlset, 'url')
-        ET.SubElement(url_elem, 'loc').text = url_for('main.site', id=website.id, _external=True)
+    ET.SubElement(url_elem, 'loc').text = _normalize_url(url_for('main.site', id=website.id, _external=True))
         # Website 没有 updated_at 字段，使用最后访问时间或创建时间
         lastmod_dt = website.last_view or website.created_at
         ET.SubElement(url_elem, 'lastmod').text = lastmod_dt.strftime('%Y-%m-%d') if lastmod_dt else datetime.now().strftime('%Y-%m-%d')
@@ -54,7 +75,7 @@ def generate_sitemap():
     
     # 添加搜索页面
     url_elem = ET.SubElement(urlset, 'url')
-    ET.SubElement(url_elem, 'loc').text = url_for('main.search', _external=True)
+    ET.SubElement(url_elem, 'loc').text = _normalize_url(url_for('main.search', _external=True))
     ET.SubElement(url_elem, 'lastmod').text = datetime.now().strftime('%Y-%m-%d')
     ET.SubElement(url_elem, 'changefreq').text = 'weekly'
     ET.SubElement(url_elem, 'priority').text = '0.5'
@@ -66,7 +87,7 @@ def generate_sitemap():
         about_url = None
     if about_url:
         url_elem = ET.SubElement(urlset, 'url')
-        ET.SubElement(url_elem, 'loc').text = about_url
+    ET.SubElement(url_elem, 'loc').text = _normalize_url(about_url)
         ET.SubElement(url_elem, 'lastmod').text = datetime.now().strftime('%Y-%m-%d')
         ET.SubElement(url_elem, 'changefreq').text = 'monthly'
         ET.SubElement(url_elem, 'priority').text = '0.3'
@@ -84,7 +105,7 @@ def generate_robots_txt():
 Allow: /
 
 # Sitemap
-Sitemap: {url_for('main.sitemap', _external=True)}
+Sitemap: {_normalize_url(url_for('main.sitemap', _external=True))}
 
 # 禁止爬取管理页面
 Disallow: /admin/
