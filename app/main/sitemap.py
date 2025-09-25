@@ -49,7 +49,7 @@ def generate_sitemap():
     for category in categories:
         # 主分类页面
         url_elem = ET.SubElement(urlset, 'url')
-    ET.SubElement(url_elem, 'loc').text = _normalize_url(url_for('main.category', id=category.id, _external=True))
+        ET.SubElement(url_elem, 'loc').text = _normalize_url(url_for('main.category', id=category.id, _external=True))
         ET.SubElement(url_elem, 'lastmod').text = datetime.now().strftime('%Y-%m-%d')
         ET.SubElement(url_elem, 'changefreq').text = 'weekly'
         ET.SubElement(url_elem, 'priority').text = '0.8'
@@ -66,7 +66,7 @@ def generate_sitemap():
     public_websites = Website.query.filter_by(is_private=False).all()
     for website in public_websites:
         url_elem = ET.SubElement(urlset, 'url')
-    ET.SubElement(url_elem, 'loc').text = _normalize_url(url_for('main.site', id=website.id, _external=True))
+        ET.SubElement(url_elem, 'loc').text = _normalize_url(url_for('main.site', id=website.id, _external=True))
         # Website 没有 updated_at 字段，使用最后访问时间或创建时间
         lastmod_dt = website.last_view or website.created_at
         ET.SubElement(url_elem, 'lastmod').text = lastmod_dt.strftime('%Y-%m-%d') if lastmod_dt else datetime.now().strftime('%Y-%m-%d')
@@ -87,7 +87,7 @@ def generate_sitemap():
         about_url = None
     if about_url:
         url_elem = ET.SubElement(urlset, 'url')
-    ET.SubElement(url_elem, 'loc').text = _normalize_url(about_url)
+        ET.SubElement(url_elem, 'loc').text = _normalize_url(about_url)
         ET.SubElement(url_elem, 'lastmod').text = datetime.now().strftime('%Y-%m-%d')
         ET.SubElement(url_elem, 'changefreq').text = 'monthly'
         ET.SubElement(url_elem, 'priority').text = '0.3'

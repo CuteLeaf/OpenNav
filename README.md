@@ -147,7 +147,7 @@ version: "3"
 
 services:
   nav:
-    image: cuteleaf/opennav:2.1.8
+    image: cuteleaf/opennav:2.1.9
     container_name: nav
     restart: always
     ports:
