@@ -51,7 +51,10 @@ RUN sed -i 's/\r$//' /entrypoint.sh /app/docker/cleanup_backups.sh \
 COPY . .
 
 # 设置持久化卷
-VOLUME ["/data", "/app/app/backups", "/app/app/uploads", "/app/app/static", "/etc/nginx/http.d"]
+# 注意：不要将整个 /app/app/static 声明为卷，否则会生成匿名卷，
+# 其内容会在首次创建容器时固定，后续更新镜像中的静态资源（如 CSS）将不会生效。
+# 仅对需要持久化的目录（如 uploads、backups、外部 Nginx 配置）做卷映射。
+VOLUME ["/data", "/app/app/backups", "/app/app/uploads", "/app/app/static/uploads", "/etc/nginx/http.d"]
 
 # 暴露端口
 EXPOSE 80
