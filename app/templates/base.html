@@ -1,564 +1,396 @@
 ﻿<!DOCTYPE html>
-<html
-  lang="zh-CN"
-  data-page-type="{% block page_type %}default{% endblock %}"
-  {%
-  if
-  settings
-  and
-  settings.background_type
-  !="none"
-  and
-  settings.background_url
-  %}
-  data-bg-type="{{ settings.background_type }}"
-  data-bg-url="{{ settings.background_url }}"
-  {%
-  endif
-  %}
->
-  <head>
-    <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"
-    />
-    <meta name="csrf-token" content="{{ csrf_token() }}" />
+<html lang="zh-CN" data-page-type="{% block page_type %}default{% endblock %}" {% if settings and
+  settings.background_type !="none" and settings.background_url %} data-bg-type="{{ settings.background_type }}"
+  data-bg-url="{{ settings.background_url }}" {% endif %}>
 
-    <!-- 预渲染侧边栏状态，避免刷新抖动 -->
-    <script>
-      (function () {
-        var pageType =
-          document.documentElement.getAttribute("data-page-type") || "default";
-        var storageKey =
-          "sidebarActive" + (pageType !== "default" ? "-" + pageType : "");
-        var savedState = localStorage.getItem(storageKey);
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
+  <meta name="csrf-token" content="{{ csrf_token() }}" />
 
-        // 分类页面默认关闭侧边栏，除非明确保存了开启状态
-        if (pageType === "category") {
-          if (savedState === "true") {
-            document.documentElement.classList.add("sidebar-active-preload");
-          }
-        } else {
-          // 其他页面使用原来的逻辑
-          if (
-            savedState === "true" ||
-            (savedState === null && window.innerWidth >= 768)
-          ) {
-            document.documentElement.classList.add("sidebar-active-preload");
-          }
-        }
+  <title>{% if request.endpoint == 'main.index' %}{% if settings %}{{ settings.site_name }}{% if settings.site_subtitle %} - {{ settings.site_subtitle }}{% endif %}{%
+    else %}OpenNav{% endif %}{% else %}{% if title %}{{ title }} - {% endif %}{% if settings %}{{ settings.site_name }}{% else %}OpenNav{% endif %}{% endif %}</title>
+  {% if settings and settings.site_keywords %}
+  <meta name="keywords" content="{{ settings.site_keywords }}" />
+  {% endif %} {% if settings and settings.site_description %}
+  <meta name="description" content="{{ settings.site_description }}" />
+  {% endif %}
 
-        // 预渲染子菜单状态
-        var submenuStates = {};
-        for (var i = 0; i < localStorage.length; i++) {
-          var key = localStorage.key(i);
-          if (key.startsWith("submenu_")) {
-            submenuStates[key] = localStorage.getItem(key);
-          }
-        }
-        if (Object.keys(submenuStates).length > 0) {
-          document.documentElement.setAttribute(
-            "data-submenu-states",
-            JSON.stringify(submenuStates)
-          );
-        }
-      })();
-    </script>
-    <style>
-      .sidebar-active-preload .sidebar {
-        left: 0 !important;
-        transition: none !important;
-      }
-      .sidebar-active-preload .main-content {
-        padding-left: calc(var(--sidebar-width) + var(--spacing-lg)) !important;
-        transition: none !important;
-      }
-      /* 预渲染子菜单状态 */
-      [data-submenu-states]
-        .sidebar-menu-item.has-submenu.active
-        .sidebar-submenu {
-        max-height: 500px !important;
-        transition: none !important;
-      }
-      [data-submenu-states]
-        .sidebar-menu-item.has-submenu.active
-        .submenu-toggle {
-        transform: rotate(180deg) !important;
-        transition: none !important;
-      }
 
-      /* 背景样式 */
-      body.bg-image {
-        background-image: var(--bg-image);
-        background-size: cover;
-        background-position: center;
-        background-attachment: fixed;
-        background-repeat: no-repeat;
-      }
+  <!-- 引入字体图标-->
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap-icons/bootstrap-icons.css') }}" />
+  <!-- 引入Font Awesome精简-->
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/font-awesome/css/fontawesome.min.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/font-awesome/css/solid.min.css') }}" />
+  <!-- 引入优化的图标CSS（性能增强） -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/icons-optimized.css') }}" />
+  <!-- 引入Bootstrap -->
+  <link href="{{ url_for('static', filename='vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet" />
+  <!-- 引入动画-->
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/animate.css/animate.min.css') }}" />
+  <!-- 自定义CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <!-- Tooltip CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/tooltip.css') }}" />
+  <!-- 回到顶部CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/back-to-top.css') }}" />
+  <!-- 页脚CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/footer.css') }}" />
+  <!-- 背景CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/background.css') }}" />
+  <!-- 模态对话框CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/modal.css') }}" />
+  <!-- 公告弹窗CSS -->
+  <style>
+    .announcement-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 9999;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
 
-      body.bg-gradient {
-        background-image: var(--bg-gradient) !important;
-        background-attachment: fixed !important;
-        background-repeat: no-repeat !important;
-        background-size: 100% 100% !important;
-      }
+    .announcement-modal.show {
+      display: flex;
+      opacity: 1;
+    }
 
-      body.bg-color {
-        background-color: var(--bg-color);
-      }
-    </style>
+    .announcement-content {
+      position: relative;
+      width: 90%;
+      margin: auto;
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      padding: 1.8rem 1.8rem 1.2rem 1.8rem;
+      transform: translateY(-20px);
+      transition: transform 0.3s ease;
+    }
 
-    {% if settings and settings.site_keywords %}
-    <meta name="keywords" content="{{ settings.site_keywords }}" />
-    {% endif %} {% if settings and settings.site_description %}
-    <meta name="description" content="{{ settings.site_description }}" />
-    {% endif %}
-    
-    <!-- SEO优化链接 -->
-    <link rel="canonical" href="{{ url_for(request.endpoint, _external=True, **request.view_args)|clean_url }}" />
-    <link rel="alternate" type="application/rss+xml" title="{{ settings.site_name if settings else 'OpenNav' }} RSS" href="{{ url_for('main.index', _external=True)|clean_url }}" />
+    .announcement-modal.show .announcement-content {
+      transform: translateY(0);
+    }
 
-    <title>
-      {% if request.endpoint == 'main.index' %}
-        {% if settings %}{{ settings.site_name }}{% if settings.site_subtitle %} - {{ settings.site_subtitle }}{% endif %}{% else %}OpenNav{% endif %}
-      {% else %}
-        {% if title %}{{ title }} - {% endif %}{% if settings %}{{ settings.site_name }}{% else %}OpenNav{% endif %}
-      {% endif %}
-    </title>
-    <!-- 引入字体图标-->
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='vendor/bootstrap-icons/bootstrap-icons.css') }}"
-    />
-    <!-- 引入Font Awesome精简-->
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='vendor/font-awesome/css/fontawesome.min.css') }}"
-    />
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='vendor/font-awesome/css/solid.min.css') }}"
-    />
-    <!-- 引入优化的图标CSS（性能增强） -->
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/icons-optimized.css') }}"
-    />
-    <!-- 引入Bootstrap -->
-    <link
-      href="{{ url_for('static', filename='vendor/bootstrap/css/bootstrap.min.css') }}"
-      rel="stylesheet"
-    />
-    <!-- 引入动画-->
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='vendor/animate.css/animate.min.css') }}"
-    />
-    <!-- 自定义CSS -->
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/style.css') }}"
-    />
-    <!-- Tooltip CSS -->
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/tooltip.css') }}"
-    />
-    <!-- 回到顶部CSS -->
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/back-to-top.css') }}"
-    />
-    <!-- 页脚CSS -->
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/footer.css') }}"
-    />
-    <!-- 背景CSS -->
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/background.css') }}"
-    />
-    <!-- 模态对话框CSS -->
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/modal.css') }}"
-    />
-    <!-- 公告弹窗CSS -->
-    <style>
-      .announcement-modal {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
-        z-index: 9999;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-      }
+    .announcement-gradient-bar {
+      height: 4px;
+      background: linear-gradient(to right, #6a11cb, #2575fc);
+      border-radius: 2px;
+      margin-bottom: 1rem;
+    }
 
-      .announcement-modal.show {
-        display: flex;
-        opacity: 1;
-      }
+    .announcement-header {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid #eee;
+    }
 
-      .announcement-content {
-        position: relative;
-        width: 90%;
-        margin: auto;
-        background: white;
-        border-radius: 15px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-        padding: 1.8rem 1.8rem 1.2rem 1.8rem;
-        transform: translateY(-20px);
-        transition: transform 0.3s ease;
-      }
+    .announcement-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #333;
+      margin: 0;
+    }
 
-      .announcement-modal.show .announcement-content {
-        transform: translateY(0);
-      }
+    .announcement-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: #666;
+      cursor: pointer;
+      padding: 0.5rem;
+      line-height: 1;
+      transition: color 0.2s ease;
+    }
 
-      .announcement-gradient-bar {
-        height: 4px;
-        background: linear-gradient(to right, #6a11cb, #2575fc);
-        border-radius: 2px;
-        margin-bottom: 1rem;
-      }
+    .announcement-close:hover {
+      color: #333;
+    }
 
-      .announcement-header {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        padding-bottom: 1rem;
-        border-bottom: 1px solid #eee;
-      }
+    .announcement-body {
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 1.1rem;
+    }
 
-      .announcement-title {
-        font-size: 1.5rem;
-        font-weight: 600;
-        color: #333;
-        margin: 0;
-      }
+    .announcement-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
 
-      .announcement-close {
-        background: none;
-        border: none;
-        font-size: 1.5rem;
-        color: #666;
-        cursor: pointer;
-        padding: 0.5rem;
-        line-height: 1;
-        transition: color 0.2s ease;
-      }
+    .announcement-link {
+      color: #6a11cb;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s ease;
+    }
 
-      .announcement-close:hover {
-        color: #333;
-      }
+    .announcement-link:hover {
+      color: #2575fc;
+    }
 
-      .announcement-body {
-        color: #666;
-        line-height: 1.6;
-        margin-bottom: 1.1rem;
-      }
+    .announcement-remember {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #666;
+      font-size: 0.9rem;
+    }
 
-      .announcement-footer {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
+    .announcement-remember input[type="checkbox"] {
+      margin: 0;
+    }
+  </style>
+  <!-- Favicon -->
+  {% if settings and settings.site_favicon %}
+  <link rel="icon" href="{{ settings.site_favicon }}"
+    type="image/{{ 'svg+xml' if settings.site_favicon.endswith('.svg') else 'x-icon' }}" />
+  <link rel="shortcut icon" href="{{ settings.site_favicon }}" />
+  <link rel="apple-touch-icon" href="{{ settings.site_favicon }}" />
+  {% else %}
+  <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon" />
+  <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.ico') }}" />
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/favicon.ico') }}" />
+  {% endif %}
 
-      .announcement-link {
-        color: #6a11cb;
-        text-decoration: none;
-        font-weight: 500;
-        transition: color 0.2s ease;
-      }
-
-      .announcement-link:hover {
-        color: #2575fc;
-      }
-
-      .announcement-remember {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        color: #666;
-        font-size: 0.9rem;
-      }
-
-      .announcement-remember input[type="checkbox"] {
-        margin: 0;
-      }
-    </style>
-    <!-- Favicon -->
-    {% if settings and settings.site_favicon %}
-    <link
-      rel="icon"
-      href="{{ settings.site_favicon }}"
-      type="image/{{ 'svg+xml' if settings.site_favicon.endswith('.svg') else 'x-icon' }}"
-    />
-    <link rel="shortcut icon" href="{{ settings.site_favicon }}" />
-    <link rel="apple-touch-icon" href="{{ settings.site_favicon }}" />
-    {% else %}
-    <link
-      rel="icon"
-      href="{{ url_for('static', filename='images/favicon.ico') }}"
-      type="image/x-icon"
-    />
-    <link
-      rel="shortcut icon"
-      href="{{ url_for('static', filename='images/favicon.ico') }}"
-    />
-    <link
-      rel="apple-touch-icon"
-      href="{{ url_for('static', filename='images/favicon.ico') }}"
-    />
-    {% endif %}
-
-    <!-- 背景处理脚本 -->
-    <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        const html = document.documentElement;
-        const body = document.body;
-        const isMobile =
-          /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-            navigator.userAgent
-          );
-
-        // 获取背景设置
-        const pcBgType = body.getAttribute("data-pc-bg-type");
-        const pcBgUrl = body.getAttribute("data-pc-bg-url");
-        const mobileBgType = body.getAttribute("data-mobile-bg-type");
-        const mobileBgUrl = body.getAttribute("data-mobile-bg-url");
-
-        // 移除所有背景相关的类
-        body.classList.remove("bg-none", "bg-image", "bg-gradient", "bg-color");
-
-        // 根据设备类型选择背景
-        if (isMobile && mobileBgType && mobileBgUrl) {
-          // 移动端背景
-          body.classList.add("bg-" + mobileBgType);
-          if (mobileBgType === "image") {
-            document.querySelector(
-              ".mobile-bg"
-            ).style.backgroundImage = `url("${mobileBgUrl}")`;
-          }
-        } else if (pcBgType && pcBgUrl) {
-          // PC端背景
-          body.classList.add("bg-" + pcBgType);
-          if (pcBgType === "image") {
-            html.style.setProperty("--bg-image", `url("${pcBgUrl}")`);
-          } else if (pcBgType === "gradient") {
-            html.style.setProperty("--bg-gradient", pcBgUrl);
-          } else if (pcBgType === "color") {
-            html.style.setProperty("--bg-color", pcBgUrl);
-          }
-        } else {
-          // 无背景
-          body.classList.add("bg-none");
-        }
-      });
-    </script>
-
-    <style>
-      /* 修CSS检查器错误 */
-      /* 清除所有无关样式错*/
-      @media screen {
-        .dummy-class {
-          color: inherit;
-        }
-      }
-
-      /* 自定义Bootstrap tooltip样式 */
-      .tooltip .tooltip-inner {
-        background: linear-gradient(
-          135deg,
-          rgba(112, 73, 240, 0.95),
-          rgba(87, 50, 218, 0.98)
+  <!-- 背景处理脚本 -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const html = document.documentElement;
+      const body = document.body;
+      const isMobile =
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+          navigator.userAgent
         );
-        color: white;
-        font-size: 14px;
-        padding: 12px 18px;
-        border-radius: 12px;
-        box-shadow: 0 10px 30px rgba(112, 73, 240, 0.35);
-        max-width: 300px;
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-        font-weight: 300;
-        line-height: 1.5;
-        /* text-align: justify; */
-        /* text-justify: inter-word; */
-      }
 
-      /* 上方箭头颜色 */
-      .tooltip.bs-tooltip-bottom .tooltip-arrow::before {
-        border-bottom-color: rgba(112, 73, 240, 0.95);
-      }
+      // 获取背景设置
+      const pcBgType = body.getAttribute("data-pc-bg-type");
+      const pcBgUrl = body.getAttribute("data-pc-bg-url");
+      const mobileBgType = body.getAttribute("data-mobile-bg-type");
+      const mobileBgUrl = body.getAttribute("data-mobile-bg-url");
 
-      /* 下方箭头颜色 */
-      .tooltip.bs-tooltip-top .tooltip-arrow::before {
-        border-top-color: rgba(87, 50, 218, 0.98);
-      }
+      // 移除所有背景相关的类
+      body.classList.remove("bg-none", "bg-image", "bg-gradient", "bg-color");
 
-      /* 左侧箭头颜色 */
-      .tooltip.bs-tooltip-start .tooltip-arrow::before {
-        border-left-color: rgba(112, 73, 240, 0.95);
+      // 根据设备类型选择背景
+      if (isMobile && mobileBgType && mobileBgUrl) {
+        // 移动端背景
+        body.classList.add("bg-" + mobileBgType);
+        if (mobileBgType === "image") {
+          document.querySelector(
+            ".mobile-bg"
+          ).style.backgroundImage = `url("${mobileBgUrl}")`;
+        }
+      } else if (pcBgType && pcBgUrl) {
+        // PC端背景
+        body.classList.add("bg-" + pcBgType);
+        if (pcBgType === "image") {
+          html.style.setProperty("--bg-image", `url("${pcBgUrl}")`);
+        } else if (pcBgType === "gradient") {
+          html.style.setProperty("--bg-gradient", pcBgUrl);
+        } else if (pcBgType === "color") {
+          html.style.setProperty("--bg-color", pcBgUrl);
+        }
+      } else {
+        // 无背景
+        body.classList.add("bg-none");
       }
+    });
+  </script>
 
-      /* 右侧箭头颜色 */
-      .tooltip.bs-tooltip-end .tooltip-arrow::before {
-        border-right-color: rgba(112, 73, 240, 0.95);
+  <style>
+    /* 修CSS检查器错误 */
+    /* 清除所有无关样式错*/
+    @media screen {
+      .dummy-class {
+        color: inherit;
       }
+    }
 
-      /* 确保tooltip显示 */
-      .tooltip {
-        opacity: 1 !important;
-        z-index: 9999 !important;
-      }
-    </style>
-    {% block head %}{% endblock %}
-  </head>
-  <body
-    class="{% if current_user.is_authenticated and current_user.is_admin %}user-admin{% endif %} {% if settings and settings.background_type != 'none' %}bg-{{ settings.background_type }}{% else %}bg-none{% endif %} {% block body_class %}{% endblock %}"
-    data-pc-bg-type="{{ settings.pc_background_type or '' }}"
-    data-pc-bg-url="{{ settings.pc_background_url or '' }}"
-    data-mobile-bg-type="{{ settings.mobile_background_type or '' }}"
-    data-mobile-bg-url="{{ settings.mobile_background_url or '' }}"
-  >
-    <div class="mobile-bg"></div>
-    <!-- 公告弹窗 -->
-    <div id="announcementModal" class="announcement-modal">
-      <div class="announcement-content">
-        <!-- <div class="announcement-gradient-bar"></div> -->
-        <div class="announcement-header">
-          <h3 class="announcement-title">{{ settings.announcement_title }}</h3>
-        </div>
-        <div class="announcement-body">
-          {{ settings.announcement_content|safe }}
-        </div>
-        <div class="announcement-footer" style="justify-content: center">
-          <button class="announcement-confirm-btn" id="announcementConfirmBtn">
-            我知道啦
-          </button>
-        </div>
+    /* 自定义Bootstrap tooltip样式 */
+    .tooltip .tooltip-inner {
+      background: linear-gradient(135deg,
+          rgba(112, 73, 240, 0.95),
+          rgba(87, 50, 218, 0.98));
+      color: white;
+      font-size: 14px;
+      padding: 12px 18px;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(112, 73, 240, 0.35);
+      max-width: 300px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      font-weight: 300;
+      line-height: 1.5;
+      /* text-align: justify; */
+      /* text-justify: inter-word; */
+    }
+
+    /* 上方箭头颜色 */
+    .tooltip.bs-tooltip-bottom .tooltip-arrow::before {
+      border-bottom-color: rgba(112, 73, 240, 0.95);
+    }
+
+    /* 下方箭头颜色 */
+    .tooltip.bs-tooltip-top .tooltip-arrow::before {
+      border-top-color: rgba(87, 50, 218, 0.98);
+    }
+
+    /* 左侧箭头颜色 */
+    .tooltip.bs-tooltip-start .tooltip-arrow::before {
+      border-left-color: rgba(112, 73, 240, 0.95);
+    }
+
+    /* 右侧箭头颜色 */
+    .tooltip.bs-tooltip-end .tooltip-arrow::before {
+      border-right-color: rgba(112, 73, 240, 0.95);
+    }
+
+    /* 确保tooltip显示 */
+    .tooltip {
+      opacity: 1 !important;
+      z-index: 9999 !important;
+    }
+  </style>
+  {% block head %}{% endblock %}
+</head>
+
+<body
+  class="{% if current_user.is_authenticated and current_user.is_admin %}user-admin{% endif %} {% if settings and settings.background_type != 'none' %}bg-{{ settings.background_type }}{% else %}bg-none{% endif %} {% block body_class %}{% endblock %}"
+  data-pc-bg-type="{{ settings.pc_background_type or '' }}" data-pc-bg-url="{{ settings.pc_background_url or '' }}"
+  data-mobile-bg-type="{{ settings.mobile_background_type or '' }}"
+  data-mobile-bg-url="{{ settings.mobile_background_url or '' }}">
+  <div class="mobile-bg"></div>
+  <!-- 公告弹窗 -->
+  <div id="announcementModal" class="announcement-modal">
+    <div class="announcement-content">
+      <!-- <div class="announcement-gradient-bar"></div> -->
+      <div class="announcement-header">
+        <h3 class="announcement-title">{{ settings.announcement_title }}</h3>
+      </div>
+      <div class="announcement-body">
+        {{ settings.announcement_content|safe }}
+      </div>
+      <div class="announcement-footer" style="justify-content: center">
+        <button class="announcement-confirm-btn" id="announcementConfirmBtn">
+          我知道啦
+        </button>
       </div>
     </div>
-    <main>
-      {% with messages = get_flashed_messages(with_categories=true) %} {% if
-      messages %}
-      <div class="flash-messages">
-        {% for category, message in messages %}
-        <div
-          class="alert alert-{{ category }} alert-dismissible fade show animate__animated animate__fadeIn"
-          role="alert"
-        >
-          {{ message }}
-          <button
-            type="button"
-            class="btn-close"
-            data-bs-dismiss="alert"
-            aria-label="Close"
-          ></button>
-        </div>
-        {% endfor %}
+  </div>
+  <main>
+    {% with messages = get_flashed_messages(with_categories=true) %} {% if
+    messages %}
+    <div class="flash-messages">
+      {% for category, message in messages %}
+      <div class="alert alert-{{ category }} alert-dismissible fade show animate__animated animate__fadeIn"
+        role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
       </div>
-      {% endif %} {% endwith %} {% block content %}{% endblock %}
-    </main>
+      {% endfor %}
+    </div>
+    {% endif %} {% endwith %} {% block content %}{% endblock %}
+  </main>
 
-    {% block footer %} {# 引入模块化页#} {% with year = now.year %} {% include
-    'common/footer.html' %} {% endwith %} {% endblock %}
+  {% block footer %} {# 引入模块化页#} {% with year = now.year %} {% include
+  'common/footer.html' %} {% endwith %} {% endblock %}
 
-    <!-- JavaScript脚本 -->
-    <script src="{{ url_for('static', filename='vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='vendor/particles.js/particles.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/navbar.js') }}"></script>
-    <!-- 回到顶部JS -->
-    <script src="{{ url_for('static', filename='js/back-to-top.js') }}"></script>
-    <!-- 页面底部通用JS -->
-    <script>
-      // 处理图标加载错误，所有页面都会执行这段代码
-      document.addEventListener("DOMContentLoaded", function () {
-        // 图标缓存管理
-        const iconCache = new Map();
-        const failedIcons = new Set();
-        const loadingIcons = new Map(); // 正在加载的图标状态
-        const loadedIcons = new Set(); // 已成功加载的图标
+  <!-- JavaScript脚本 -->
+  <script src="{{ url_for('static', filename='vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendor/particles.js/particles.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/navbar.js') }}"></script>
+  <!-- 回到顶部JS -->
+  <script src="{{ url_for('static', filename='js/back-to-top.js') }}"></script>
+  <!-- 页面底部通用JS -->
+  <script>
+    // 处理图标加载错误，所有页面都会执行这段代码
+    document.addEventListener("DOMContentLoaded", function () {
+      // 图标缓存管理
+      const iconCache = new Map();
+      const failedIcons = new Set();
+      const loadingIcons = new Map(); // 正在加载的图标状态
+      const loadedIcons = new Set(); // 已成功加载的图标
 
-        // 智能加载配置
-        const loadConfig = {
-          initialTimeout: 5000, // 初始超时5秒
-          retryTimeout: 3000, // 重试超时3秒
-          maxRetries: 2, // 最大重试次数
-          slowNetworkThreshold: 8000, // 慢网络阈值8秒
-          progressiveTimeout: true, // 启用渐进式超时
-        };
+      // 智能加载配置
+      const loadConfig = {
+        initialTimeout: 5000, // 初始超时5秒
+        retryTimeout: 3000, // 重试超时3秒
+        maxRetries: 2, // 最大重试次数
+        slowNetworkThreshold: 8000, // 慢网络阈值8秒
+        progressiveTimeout: true, // 启用渐进式超时
+      };
 
-        // 从localStorage恢复缓存状态
-        function restoreIconCache() {
-          try {
-            const savedCache = localStorage.getItem("iconCache");
-            const savedFailed = localStorage.getItem("failedIcons");
-            const savedLoaded = localStorage.getItem("loadedIcons");
-
-            if (savedCache) {
-              const cacheData = JSON.parse(savedCache);
-              cacheData.forEach(([url, timestamp]) => {
-                // 检查缓存是否过期（24小时）
-                if (Date.now() - timestamp < 24 * 60 * 60 * 1000) {
-                  iconCache.set(url, true);
-                }
-              });
-            }
-
-            if (savedFailed) {
-              const failedData = JSON.parse(savedFailed);
-              failedData.forEach((url) => {
-                // 检查失败记录是否过期（1小时）
-                if (Date.now() - url.timestamp < 60 * 60 * 1000) {
-                  failedIcons.add(url.url);
-                }
-              });
-            }
-
-            if (savedLoaded) {
-              const loadedData = JSON.parse(savedLoaded);
-              loadedData.forEach((url) => {
-                loadedIcons.add(url);
-              });
-            }
-          } catch (e) {
-            console.log("Failed to restore icon cache:", e);
-          }
-        }
-
-        // 保存缓存状态到localStorage
-        function saveIconCache() {
-          try {
-            const cacheData = Array.from(iconCache.entries()).map(
-              ([url, _]) => [url, Date.now()]
-            );
-            const failedData = Array.from(failedIcons).map((url) => ({
-              url,
-              timestamp: Date.now(),
-            }));
-            const loadedData = Array.from(loadedIcons);
-
-            localStorage.setItem("iconCache", JSON.stringify(cacheData));
-            localStorage.setItem("failedIcons", JSON.stringify(failedData));
-            localStorage.setItem("loadedIcons", JSON.stringify(loadedData));
-          } catch (e) {
-            console.log("Failed to save icon cache:", e);
-          }
-        }
-
-        // 创建Web Worker用于多线程图标加载
-        let iconWorker = null;
+      // 从localStorage恢复缓存状态
+      function restoreIconCache() {
         try {
-          const workerCode = `
+          const savedCache = localStorage.getItem("iconCache");
+          const savedFailed = localStorage.getItem("failedIcons");
+          const savedLoaded = localStorage.getItem("loadedIcons");
+
+          if (savedCache) {
+            const cacheData = JSON.parse(savedCache);
+            cacheData.forEach(([url, timestamp]) => {
+              // 检查缓存是否过期（24小时）
+              if (Date.now() - timestamp < 24 * 60 * 60 * 1000) {
+                iconCache.set(url, true);
+              }
+            });
+          }
+
+          if (savedFailed) {
+            const failedData = JSON.parse(savedFailed);
+            failedData.forEach((url) => {
+              // 检查失败记录是否过期（1小时）
+              if (Date.now() - url.timestamp < 60 * 60 * 1000) {
+                failedIcons.add(url.url);
+              }
+            });
+          }
+
+          if (savedLoaded) {
+            const loadedData = JSON.parse(savedLoaded);
+            loadedData.forEach((url) => {
+              loadedIcons.add(url);
+            });
+          }
+        } catch (e) {
+          console.log("Failed to restore icon cache:", e);
+        }
+      }
+
+      // 保存缓存状态到localStorage
+      function saveIconCache() {
+        try {
+          const cacheData = Array.from(iconCache.entries()).map(
+            ([url, _]) => [url, Date.now()]
+          );
+          const failedData = Array.from(failedIcons).map((url) => ({
+            url,
+            timestamp: Date.now(),
+          }));
+          const loadedData = Array.from(loadedIcons);
+
+          localStorage.setItem("iconCache", JSON.stringify(cacheData));
+          localStorage.setItem("failedIcons", JSON.stringify(failedData));
+          localStorage.setItem("loadedIcons", JSON.stringify(loadedData));
+        } catch (e) {
+          console.log("Failed to save icon cache:", e);
+        }
+      }
+
+      // 创建Web Worker用于多线程图标加载
+      let iconWorker = null;
+      try {
+        const workerCode = `
             // 图标加载Worker
             self.onmessage = function(e) {
               const { url, id } = e.data;
@@ -578,408 +410,406 @@
             };
           `;
 
-          const blob = new Blob([workerCode], {
-            type: "application/javascript",
-          });
-          iconWorker = new Worker(URL.createObjectURL(blob));
-        } catch (e) {
-          console.log(
-            "Web Worker not supported, falling back to normal loading"
+        const blob = new Blob([workerCode], {
+          type: "application/javascript",
+        });
+        iconWorker = new Worker(URL.createObjectURL(blob));
+      } catch (e) {
+        console.log(
+          "Web Worker not supported, falling back to normal loading"
+        );
+      }
+
+      // 图标加载状态管理
+      const iconLoadStates = new Map();
+
+      // 检测网络速度
+      function detectNetworkSpeed() {
+        const startTime = performance.now();
+        return fetch("/static/images/favicon.ico", {
+          method: "HEAD",
+          cache: "no-cache",
+        })
+          .then(() => {
+            const endTime = performance.now();
+            const loadTime = endTime - startTime;
+            return {
+              isSlow: loadTime > loadConfig.slowNetworkThreshold,
+              loadTime: loadTime,
+            };
+          })
+          .catch(() => ({ isSlow: true, loadTime: Infinity }));
+      }
+
+      // 智能超时计算
+      function getSmartTimeout(retryCount = 0, networkSpeed = null) {
+        if (networkSpeed && networkSpeed.isSlow) {
+          // 慢网络：增加超时时间
+          return loadConfig.initialTimeout * (1.5 + retryCount * 0.5);
+        }
+
+        if (loadConfig.progressiveTimeout) {
+          // 渐进式超时：根据重试次数调整
+          return (
+            loadConfig.initialTimeout + retryCount * loadConfig.retryTimeout
           );
         }
 
-        // 图标加载状态管理
-        const iconLoadStates = new Map();
+        return loadConfig.initialTimeout;
+      }
 
-        // 检测网络速度
-        function detectNetworkSpeed() {
-          const startTime = performance.now();
-          return fetch("/static/images/favicon.ico", {
-            method: "HEAD",
-            cache: "no-cache",
-          })
-            .then(() => {
-              const endTime = performance.now();
-              const loadTime = endTime - startTime;
-              return {
-                isSlow: loadTime > loadConfig.slowNetworkThreshold,
-                loadTime: loadTime,
-              };
-            })
-            .catch(() => ({ isSlow: true, loadTime: Infinity }));
+      // 预加载关键图标
+      function preloadCriticalIcons() {
+        const criticalIcons = [
+          // 添加需要预加载的关键图标URL
+        ];
+
+        criticalIcons.forEach((url) => {
+          if (!iconCache.has(url) && !failedIcons.has(url)) {
+            const img = new Image();
+            img.onload = () => iconCache.set(url, true);
+            img.onerror = () => failedIcons.add(url);
+            img.src = url;
+          }
+        });
+      }
+
+      // 智能图标加载函数
+      function loadIconWithCache(img, retryCount = 0) {
+        const url = img.src;
+        const imgId = Math.random().toString(36).substr(2, 9);
+
+        // 检查缓存 - 如果已成功加载过，直接跳过
+        if (iconCache.has(url) || loadedIcons.has(url)) {
+          return; // 已缓存，直接使用
         }
 
-        // 智能超时计算
-        function getSmartTimeout(retryCount = 0, networkSpeed = null) {
-          if (networkSpeed && networkSpeed.isSlow) {
-            // 慢网络：增加超时时间
-            return loadConfig.initialTimeout * (1.5 + retryCount * 0.5);
-          }
-
-          if (loadConfig.progressiveTimeout) {
-            // 渐进式超时：根据重试次数调整
-            return (
-              loadConfig.initialTimeout + retryCount * loadConfig.retryTimeout
-            );
-          }
-
-          return loadConfig.initialTimeout;
-        }
-
-        // 预加载关键图标
-        function preloadCriticalIcons() {
-          const criticalIcons = [
-            // 添加需要预加载的关键图标URL
-          ];
-
-          criticalIcons.forEach((url) => {
-            if (!iconCache.has(url) && !failedIcons.has(url)) {
-              const img = new Image();
-              img.onload = () => iconCache.set(url, true);
-              img.onerror = () => failedIcons.add(url);
-              img.src = url;
-            }
-          });
-        }
-
-        // 智能图标加载函数
-        function loadIconWithCache(img, retryCount = 0) {
-          const url = img.src;
-          const imgId = Math.random().toString(36).substr(2, 9);
-
-          // 检查缓存 - 如果已成功加载过，直接跳过
-          if (iconCache.has(url) || loadedIcons.has(url)) {
-            return; // 已缓存，直接使用
-          }
-
-          // 检查失败记录
-          if (failedIcons.has(url)) {
-            // 如果之前失败过，但图片现在显示正常，则移除失败记录
-            if (img.complete && img.naturalWidth > 0 && img.naturalHeight > 0) {
-              failedIcons.delete(url);
-              loadedIcons.add(url);
-              saveIconCache();
-              return;
-            }
-            handleImageError(img);
-            return;
-          }
-
-          // 如果正在加载，不重复加载
-          if (loadingIcons.has(url)) {
-            return;
-          }
-
-          // 如果图片已经加载完成且有效，直接标记为成功
+        // 检查失败记录
+        if (failedIcons.has(url)) {
+          // 如果之前失败过，但图片现在显示正常，则移除失败记录
           if (img.complete && img.naturalWidth > 0 && img.naturalHeight > 0) {
+            failedIcons.delete(url);
             loadedIcons.add(url);
-            iconCache.set(url, true);
             saveIconCache();
             return;
           }
-
-          // 标记为正在加载
-          loadingIcons.set(url, { retryCount, imgId });
-
-          // 检测网络速度并设置智能超时
-          detectNetworkSpeed().then((networkSpeed) => {
-            const timeout = getSmartTimeout(retryCount, networkSpeed);
-
-            console.log(
-              `Loading icon: ${url}, timeout: ${timeout}ms, retry: ${retryCount}, network: ${
-                networkSpeed.isSlow ? "slow" : "normal"
-              }`
-            );
-
-            // 设置加载超时
-            const timeoutId = setTimeout(() => {
-              loadingIcons.delete(url);
-
-              if (retryCount < loadConfig.maxRetries) {
-                console.log(
-                  `Icon timeout, retrying: ${url} (${retryCount + 1}/${
-                    loadConfig.maxRetries
-                  })`
-                );
-                // 重试加载
-                setTimeout(() => {
-                  loadIconWithCache(img, retryCount + 1);
-                }, 1000); // 1秒后重试
-              } else {
-                console.log(
-                  `Icon failed after ${loadConfig.maxRetries} retries: ${url}`
-                );
-                failedIcons.add(url);
-                saveIconCache();
-                handleImageError(img);
-              }
-            }, timeout);
-
-            img.onload = function () {
-              clearTimeout(timeoutId);
-              loadingIcons.delete(url);
-              iconCache.set(url, true);
-              loadedIcons.add(url);
-              saveIconCache();
-              console.log(`Icon loaded successfully: ${url}`);
-              validateImage(this);
-            };
-
-            img.onerror = function () {
-              clearTimeout(timeoutId);
-              loadingIcons.delete(url);
-
-              if (retryCount < loadConfig.maxRetries) {
-                console.log(
-                  `Icon error, retrying: ${url} (${retryCount + 1}/${
-                    loadConfig.maxRetries
-                  })`
-                );
-                // 重试加载
-                setTimeout(() => {
-                  loadIconWithCache(img, retryCount + 1);
-                }, 1000); // 1秒后重试
-              } else {
-                console.log(
-                  `Icon failed after ${loadConfig.maxRetries} retries: ${url}`
-                );
-                failedIcons.add(url);
-                saveIconCache();
-                handleImageError(this);
-              }
-            };
-          });
+          handleImageError(img);
+          return;
         }
 
-        // 为所有网站图标添加错误处理和超时控制
-        function handleSiteImages() {
-          const siteImages = document.querySelectorAll(
-            ".site-icon img, .related-icon img"
+        // 如果正在加载，不重复加载
+        if (loadingIcons.has(url)) {
+          return;
+        }
+
+        // 如果图片已经加载完成且有效，直接标记为成功
+        if (img.complete && img.naturalWidth > 0 && img.naturalHeight > 0) {
+          loadedIcons.add(url);
+          iconCache.set(url, true);
+          saveIconCache();
+          return;
+        }
+
+        // 标记为正在加载
+        loadingIcons.set(url, { retryCount, imgId });
+
+        // 检测网络速度并设置智能超时
+        detectNetworkSpeed().then((networkSpeed) => {
+          const timeout = getSmartTimeout(retryCount, networkSpeed);
+
+          console.log(
+            `Loading icon: ${url}, timeout: ${timeout}ms, retry: ${retryCount}, network: ${networkSpeed.isSlow ? "slow" : "normal"
+            }`
           );
 
-          siteImages.forEach((img) => {
-            const imgId = Math.random().toString(36).substr(2, 9);
-            iconLoadStates.set(imgId, { img, loaded: false });
+          // 设置加载超时
+          const timeoutId = setTimeout(() => {
+            loadingIcons.delete(url);
 
-            // 使用优化的加载函数
-            loadIconWithCache(img);
-
-            // 检查图片是否已经加载并且是有效图标
-            if (img.complete) {
-              validateImage(img);
-              iconLoadStates.set(imgId, { img, loaded: true });
+            if (retryCount < loadConfig.maxRetries) {
+              console.log(
+                `Icon timeout, retrying: ${url} (${retryCount + 1}/${loadConfig.maxRetries
+                })`
+              );
+              // 重试加载
+              setTimeout(() => {
+                loadIconWithCache(img, retryCount + 1);
+              }, 1000); // 1秒后重试
+            } else {
+              console.log(
+                `Icon failed after ${loadConfig.maxRetries} retries: ${url}`
+              );
+              failedIcons.add(url);
+              saveIconCache();
+              handleImageError(img);
             }
+          }, timeout);
 
-            // 使用Worker预加载图标（如果支持）
-            if (iconWorker && img.src && !iconCache.has(img.src)) {
-              iconWorker.postMessage({ url: img.src, id: imgId });
-            }
-          });
-        }
+          img.onload = function () {
+            clearTimeout(timeoutId);
+            loadingIcons.delete(url);
+            iconCache.set(url, true);
+            loadedIcons.add(url);
+            saveIconCache();
+            console.log(`Icon loaded successfully: ${url}`);
+            validateImage(this);
+          };
 
-        // 处理Worker消息
-        if (iconWorker) {
-          iconWorker.onmessage = function (e) {
-            const { id, status, url } = e.data;
-            const state = iconLoadStates.get(id);
+          img.onerror = function () {
+            clearTimeout(timeoutId);
+            loadingIcons.delete(url);
 
-            if (state && !state.loaded) {
-              if (status === "error") {
-                failedIcons.add(url);
-              }
+            if (retryCount < loadConfig.maxRetries) {
+              console.log(
+                `Icon error, retrying: ${url} (${retryCount + 1}/${loadConfig.maxRetries
+                })`
+              );
+              // 重试加载
+              setTimeout(() => {
+                loadIconWithCache(img, retryCount + 1);
+              }, 1000); // 1秒后重试
+            } else {
+              console.log(
+                `Icon failed after ${loadConfig.maxRetries} retries: ${url}`
+              );
+              failedIcons.add(url);
+              saveIconCache();
+              handleImageError(this);
             }
           };
-        }
+        });
+      }
 
-        // 统一的错误处理函数
-        function handleImageError(img) {
-          const siteName = img.alt || "site";
-          const firstLetter = siteName.charAt(0).toUpperCase();
-          const parentEl = img.parentElement;
+      // 为所有网站图标添加错误处理和超时控制
+      function handleSiteImages() {
+        const siteImages = document.querySelectorAll(
+          ".site-icon img, .related-icon img"
+        );
 
-          // 移除错误的图片
-          img.remove();
+        siteImages.forEach((img) => {
+          const imgId = Math.random().toString(36).substr(2, 9);
+          iconLoadStates.set(imgId, { img, loaded: false });
 
-          // 创建默认图标
-          const defaultIcon = document.createElement("div");
-          defaultIcon.className = "default-site-icon";
-          defaultIcon.textContent = firstLetter;
-          parentEl.appendChild(defaultIcon);
-        }
+          // 使用优化的加载函数
+          loadIconWithCache(img);
 
-        // 验证图片是否有效 - 更智能的验证
-        function validateImage(img) {
-          const url = img.src;
-
-          // 如果图片已经成功加载过，不要轻易判定为无效
-          if (loadedIcons.has(url) || iconCache.has(url)) {
-            return;
+          // 检查图片是否已经加载并且是有效图标
+          if (img.complete) {
+            validateImage(img);
+            iconLoadStates.set(imgId, { img, loaded: true });
           }
 
-          // 检查图片尺寸
-          if (img.naturalWidth === 0 || img.naturalHeight === 0) {
-            // 给图片一点时间，可能是延迟加载
-            setTimeout(() => {
-              if (img.naturalWidth === 0 || img.naturalHeight === 0) {
-                console.log(`Icon validation failed: ${url}`);
-                handleImageError(img);
-              } else {
-                // 图片最终加载成功
-                loadedIcons.add(url);
-                iconCache.set(url, true);
-                saveIconCache();
-              }
-            }, 1000);
-          } else {
-            // 图片有效，记录成功
-            loadedIcons.add(url);
-            iconCache.set(url, true);
-            saveIconCache();
+          // 使用Worker预加载图标（如果支持）
+          if (iconWorker && img.src && !iconCache.has(img.src)) {
+            iconWorker.postMessage({ url: img.src, id: imgId });
           }
-        }
+        });
+      }
 
-        // 初始化图片处理
-        restoreIconCache(); // 恢复缓存状态
-        preloadCriticalIcons();
-        handleSiteImages();
+      // 处理Worker消息
+      if (iconWorker) {
+        iconWorker.onmessage = function (e) {
+          const { id, status, url } = e.data;
+          const state = iconLoadStates.get(id);
 
-        // 监听动态加载的内容
-        const observer = new MutationObserver(function (mutations) {
-          mutations.forEach(function (mutation) {
-            if (mutation.addedNodes.length) {
-              handleSiteImages();
+          if (state && !state.loaded) {
+            if (status === "error") {
+              failedIcons.add(url);
             }
-          });
-        });
+          }
+        };
+      }
 
-        // 配置观察器
-        observer.observe(document.body, {
-          childList: true,
-          subtree: true,
-        });
+      // 统一的错误处理函数
+      function handleImageError(img) {
+        const siteName = img.alt || "site";
+        const firstLetter = siteName.charAt(0).toUpperCase();
+        const parentEl = img.parentElement;
 
-        // 页面卸载时清理Worker
-        window.addEventListener("beforeunload", function () {
-          if (iconWorker) {
-            iconWorker.terminate();
+        // 移除错误的图片
+        img.remove();
+
+        // 创建默认图标
+        const defaultIcon = document.createElement("div");
+        defaultIcon.className = "default-site-icon";
+        defaultIcon.textContent = firstLetter;
+        parentEl.appendChild(defaultIcon);
+      }
+
+      // 验证图片是否有效 - 更智能的验证
+      function validateImage(img) {
+        const url = img.src;
+
+        // 如果图片已经成功加载过，不要轻易判定为无效
+        if (loadedIcons.has(url) || iconCache.has(url)) {
+          return;
+        }
+
+        // 检查图片尺寸
+        if (img.naturalWidth === 0 || img.naturalHeight === 0) {
+          // 给图片一点时间，可能是延迟加载
+          setTimeout(() => {
+            if (img.naturalWidth === 0 || img.naturalHeight === 0) {
+              console.log(`Icon validation failed: ${url}`);
+              handleImageError(img);
+            } else {
+              // 图片最终加载成功
+              loadedIcons.add(url);
+              iconCache.set(url, true);
+              saveIconCache();
+            }
+          }, 1000);
+        } else {
+          // 图片有效，记录成功
+          loadedIcons.add(url);
+          iconCache.set(url, true);
+          saveIconCache();
+        }
+      }
+
+      // 初始化图片处理
+      restoreIconCache(); // 恢复缓存状态
+      preloadCriticalIcons();
+      handleSiteImages();
+
+      // 监听动态加载的内容
+      const observer = new MutationObserver(function (mutations) {
+        mutations.forEach(function (mutation) {
+          if (mutation.addedNodes.length) {
+            handleSiteImages();
           }
         });
       });
-    </script>
 
-    <!-- 把settings对象传递给JavaScript -->
-    <script>
-      window.settings = {
-        enable_transition: {% if settings.enable_transition %}true{% else %}false{% endif %},
-        transition_remember_choice: {% if settings.transition_remember_choice %}true{% else %}false{% endif %},
-        transition_theme: "{{ settings.transition_theme or 'default' }}",
-        transition_color: "{{ settings.transition_color or '#6e8efb' }}",
-        announcement_enabled: {% if settings.announcement_enabled %}true{% else %}false{% endif %},
-        announcement_title: "{{ settings.announcement_title or '' }}",
-        announcement_content: {{ settings.announcement_content|tojson|safe }},
-        announcement_link: "{{ settings.announcement_link or '' }}",
-        announcement_start: "{{ settings.announcement_start or '' }}",
+      // 配置观察器
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+      });
+
+      // 页面卸载时清理Worker
+      window.addEventListener("beforeunload", function () {
+        if (iconWorker) {
+          iconWorker.terminate();
+        }
+      });
+    });
+  </script>
+
+  <!-- 把settings对象传递给JavaScript -->
+  <script>
+    window.settings = {
+      enable_transition: {% if settings.enable_transition %}true{% else %} false{% endif %},
+    transition_remember_choice: {% if settings.transition_remember_choice %} true{% else %} false{% endif %},
+    transition_theme: "{{ settings.transition_theme or 'default' }}",
+      transition_color: "{{ settings.transition_color or '#6e8efb' }}",
+        announcement_enabled: {% if settings.announcement_enabled %} true{% else %} false{% endif %},
+    announcement_title: "{{ settings.announcement_title or '' }}",
+      announcement_content: { { settings.announcement_content | tojson | safe } },
+    announcement_link: "{{ settings.announcement_link or '' }}",
+      announcement_start: "{{ settings.announcement_start or '' }}",
         announcement_end: "{{ settings.announcement_end or '' }}",
-        announcement_remember_days: {{ settings.announcement_remember_days or 7 }}
+          announcement_remember_days: { { settings.announcement_remember_days or 7 } }
       };
-    </script>
+  </script>
 
-    <!-- 公告弹窗处理脚本 -->
-    <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        const modal = document.getElementById("announcementModal");
-        const confirmBtn = document.getElementById("announcementConfirmBtn");
+  <!-- 公告弹窗处理脚本 -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const modal = document.getElementById("announcementModal");
+      const confirmBtn = document.getElementById("announcementConfirmBtn");
 
-        function shouldShowAnnouncement() {
-          if (!window.settings.announcement_enabled) return false;
-          const rememberedData = localStorage.getItem(
-            "announcement_remembered"
-          );
-          if (rememberedData) {
-            try {
-              const { timestamp } = JSON.parse(rememberedData);
-              const now = new Date().getTime();
-              const rememberDays =
-                window.settings.announcement_remember_days || 7;
-              const rememberMs = rememberDays * 24 * 60 * 60 * 1000;
-              if (now - timestamp < rememberMs) return false;
-              else localStorage.removeItem("announcement_remembered");
-            } catch (e) {
-              localStorage.removeItem("announcement_remembered");
-            }
+      function shouldShowAnnouncement() {
+        if (!window.settings.announcement_enabled) return false;
+        const rememberedData = localStorage.getItem(
+          "announcement_remembered"
+        );
+        if (rememberedData) {
+          try {
+            const { timestamp } = JSON.parse(rememberedData);
+            const now = new Date().getTime();
+            const rememberDays =
+              window.settings.announcement_remember_days || 7;
+            const rememberMs = rememberDays * 24 * 60 * 60 * 1000;
+            if (now - timestamp < rememberMs) return false;
+            else localStorage.removeItem("announcement_remembered");
+          } catch (e) {
+            localStorage.removeItem("announcement_remembered");
           }
-          const now = new Date();
-          const start = window.settings.announcement_start
-            ? new Date(window.settings.announcement_start)
-            : null;
-          const end = window.settings.announcement_end
-            ? new Date(window.settings.announcement_end)
-            : null;
-          if (start && now < start) return false;
-          if (end && now > end) return false;
-          return true;
         }
+        const now = new Date();
+        const start = window.settings.announcement_start
+          ? new Date(window.settings.announcement_start)
+          : null;
+        const end = window.settings.announcement_end
+          ? new Date(window.settings.announcement_end)
+          : null;
+        if (start && now < start) return false;
+        if (end && now > end) return false;
+        return true;
+      }
 
-        function closeAnnouncement() {
-          modal.classList.remove("show");
-          const data = { timestamp: new Date().getTime() };
-          localStorage.setItem("announcement_remembered", JSON.stringify(data));
-        }
+      function closeAnnouncement() {
+        modal.classList.remove("show");
+        const data = { timestamp: new Date().getTime() };
+        localStorage.setItem("announcement_remembered", JSON.stringify(data));
+      }
 
-        confirmBtn.addEventListener("click", closeAnnouncement);
-        document.addEventListener("keydown", function (e) {
-          if (e.key === "Escape") closeAnnouncement();
-        });
-
-        if (shouldShowAnnouncement()) modal.classList.add("show");
+      confirmBtn.addEventListener("click", closeAnnouncement);
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") closeAnnouncement();
       });
-    </script>
 
-    {% if settings.enable_transition %}
-    <!-- 过渡页处理脚本 -->
-    <script src="{{ url_for('static', filename='js/transition.js') }}"></script>
-    {% endif %}
+      if (shouldShowAnnouncement()) modal.classList.add("show");
+    });
+  </script>
 
-    <!-- 移动端Tooltip处理脚本 -->
-    <script src="{{ url_for('static', filename='js/tooltip-handler.js') }}"></script>
+  {% if settings.enable_transition %}
+  <!-- 过渡页处理脚本 -->
+  <script src="{{ url_for('static', filename='js/transition.js') }}"></script>
+  {% endif %}
 
-    <!-- 引入CSRF令牌处理脚本 -->
-    <script src="{{ url_for('static', filename='js/csrf-handler.js') }}"></script>
+  <!-- 移动端Tooltip处理脚本 -->
+  <script src="{{ url_for('static', filename='js/tooltip-handler.js') }}"></script>
 
-    <!-- 引入Bootstrap JS -->
-    <script src="{{ url_for('static', filename='vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+  <!-- 引入CSRF令牌处理脚本 -->
+  <script src="{{ url_for('static', filename='js/csrf-handler.js') }}"></script>
 
-    {% block scripts %}{% endblock %}
+  <!-- 引入Bootstrap JS -->
+  <script src="{{ url_for('static', filename='vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
 
-    <!-- 设备检测与壁纸应用 -->
-    <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        const isMobile =
-          /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-            navigator.userAgent
-          );
-        const body = document.body;
-        const pcBgType = body.getAttribute("data-pc-bg-type");
-        const pcBgUrl = body.getAttribute("data-pc-bg-url");
-        const mobileBgType = body.getAttribute("data-mobile-bg-type");
-        const mobileBgUrl = body.getAttribute("data-mobile-bg-url");
+  {% block scripts %}{% endblock %}
 
-        if (isMobile && mobileBgType === "image" && mobileBgUrl) {
-          document.querySelector(".mobile-bg").style.backgroundImage =
-            "url(" + mobileBgUrl + ")";
-        } else if (pcBgType && pcBgUrl && pcBgType === "image") {
-          body.style.backgroundImage = "url(" + pcBgUrl + ")";
-          body.style.backgroundSize = "cover";
-          body.style.backgroundPosition = "center";
-          body.style.backgroundRepeat = "no-repeat";
-          body.style.backgroundAttachment = "fixed";
-        } else if (pcBgType === "gradient" && pcBgUrl) {
-          body.style.backgroundImage = pcBgUrl;
-          body.style.backgroundAttachment = "fixed";
-        } else if (pcBgType === "color" && pcBgUrl) {
-          body.style.backgroundColor = pcBgUrl;
-        }
-      });
-    </script>
-  </body>
+  <!-- 设备检测与壁纸应用 -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const isMobile =
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+          navigator.userAgent
+        );
+      const body = document.body;
+      const pcBgType = body.getAttribute("data-pc-bg-type");
+      const pcBgUrl = body.getAttribute("data-pc-bg-url");
+      const mobileBgType = body.getAttribute("data-mobile-bg-type");
+      const mobileBgUrl = body.getAttribute("data-mobile-bg-url");
+
+      if (isMobile && mobileBgType === "image" && mobileBgUrl) {
+        document.querySelector(".mobile-bg").style.backgroundImage =
+          "url(" + mobileBgUrl + ")";
+      } else if (pcBgType && pcBgUrl && pcBgType === "image") {
+        body.style.backgroundImage = "url(" + pcBgUrl + ")";
+        body.style.backgroundSize = "cover";
+        body.style.backgroundPosition = "center";
+        body.style.backgroundRepeat = "no-repeat";
+        body.style.backgroundAttachment = "fixed";
+      } else if (pcBgType === "gradient" && pcBgUrl) {
+        body.style.backgroundImage = pcBgUrl;
+        body.style.backgroundAttachment = "fixed";
+      } else if (pcBgType === "color" && pcBgUrl) {
+        body.style.backgroundColor = pcBgUrl;
+      }
+    });
+  </script>
+</body>
+
 </html>

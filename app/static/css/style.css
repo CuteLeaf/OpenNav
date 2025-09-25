@@ -99,9 +99,8 @@ body {
 }
 
 .website-card:hover {
-  /* 移除上移效果，增加厚重感 */
-  /* transform: translateY(-3px); */
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.12);
+  /* 去除外发光，仅保留边框变化 */
+  box-shadow: none;
   border: 1px solid rgba(112, 73, 240, 0.2);
 }
 
@@ -356,9 +355,11 @@ body {
 }
 
 .site-card:hover {
-  box-shadow: 0 8px 20px rgba(74, 136, 252, 0.3);
+  /* 轻微浮起，不要外发光 */
+  transform: translateY(-3px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); /* 与默认一致，避免发光效果 */
+  filter: none;
   border: 1px solid #4a88fc;
-  filter: drop-shadow(0 0 5px rgba(74, 136, 252, 0.5));
 }
 
 /* 卡片拖拽样式 */

@@ -41,12 +41,14 @@ def generate_sitemap():
             ET.SubElement(url_elem, 'changefreq').text = 'weekly'
             ET.SubElement(url_elem, 'priority').text = '0.7'
     
-    # 添加公开的网站详情页
+    # 添加公开的网站详情页（跳转页）
     public_websites = Website.query.filter_by(is_private=False).all()
     for website in public_websites:
         url_elem = ET.SubElement(urlset, 'url')
         ET.SubElement(url_elem, 'loc').text = url_for('main.site', id=website.id, _external=True)
-        ET.SubElement(url_elem, 'lastmod').text = website.updated_at.strftime('%Y-%m-%d') if website.updated_at else website.created_at.strftime('%Y-%m-%d')
+        # Website 没有 updated_at 字段，使用最后访问时间或创建时间
+        lastmod_dt = website.last_view or website.created_at
+        ET.SubElement(url_elem, 'lastmod').text = lastmod_dt.strftime('%Y-%m-%d') if lastmod_dt else datetime.now().strftime('%Y-%m-%d')
         ET.SubElement(url_elem, 'changefreq').text = 'monthly'
         ET.SubElement(url_elem, 'priority').text = '0.6'
     
@@ -59,13 +61,15 @@ def generate_sitemap():
     
     # 添加关于页面（如果存在）
     try:
+        about_url = url_for('main.about', _external=True)
+    except Exception:
+        about_url = None
+    if about_url:
         url_elem = ET.SubElement(urlset, 'url')
-        ET.SubElement(url_elem, 'loc').text = url_for('main.about', _external=True)
+        ET.SubElement(url_elem, 'loc').text = about_url
         ET.SubElement(url_elem, 'lastmod').text = datetime.now().strftime('%Y-%m-%d')
         ET.SubElement(url_elem, 'changefreq').text = 'monthly'
         ET.SubElement(url_elem, 'priority').text = '0.3'
-    except:
-        pass  # 如果没有关于页面路由，跳过
     
     # 转换为字符串
     tree = ET.ElementTree(urlset)

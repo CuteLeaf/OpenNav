@@ -1,54 +1,5 @@
 {% extends "base.html" %} 
-
-{# SEO优化 #}
 {% block head %}
-<!-- SEO 元标签 -->
-{% if settings %}
-<meta name="description" content="{% if settings.site_description %}{{ settings.site_description }}{% else %}{{ settings.site_name }} - 精选网站导航，发现优质网站资源{% endif %}" />
-<meta name="keywords" content="{% if settings.site_keywords %}{{ settings.site_keywords }}{% else %}导航,网站导航,网址大全,网站收藏,书签导航{% endif %}" />
-<meta name="author" content="{{ settings.site_name or 'OpenNav' }}" />
-<meta name="robots" content="index,follow" />
-<meta name="googlebot" content="index,follow" />
-<meta name="bingbot" content="index,follow" />
-
-<!-- Open Graph / Facebook -->
-<meta property="og:type" content="website" />
-<meta property="og:url" content="{{ url_for('main.index', _external=True)|clean_url }}" />
-<meta property="og:title" content="{{ settings.site_name }}{% if settings.site_subtitle %} - {{ settings.site_subtitle }}{% endif %}" />
-<meta property="og:description" content="{% if settings.site_description %}{{ settings.site_description }}{% else %}{{ settings.site_name }} - 精选网站导航，发现优质网站资源{% endif %}" />
-{% if settings.site_favicon %}
-<meta property="og:image" content="{{ settings.site_favicon if settings.site_favicon.startswith('http') else url_for('static', filename='images/favicon.ico', _external=True)|clean_url }}" />
-{% endif %}
-
-<!-- Twitter -->
-<meta property="twitter:card" content="summary_large_image" />
-<meta property="twitter:url" content="{{ url_for('main.index', _external=True)|clean_url }}" />
-<meta property="twitter:title" content="{{ settings.site_name }}{% if settings.site_subtitle %} - {{ settings.site_subtitle }}{% endif %}" />
-<meta property="twitter:description" content="{% if settings.site_description %}{{ settings.site_description }}{% else %}{{ settings.site_name }} - 精选网站导航，发现优质网站资源{% endif %}" />
-{% if settings.site_favicon %}
-<meta property="twitter:image" content="{{ settings.site_favicon if settings.site_favicon.startswith('http') else url_for('static', filename='images/favicon.ico', _external=True)|clean_url }}" />
-{% endif %}
-
-<!-- 结构化数据 -->
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "WebSite",
-  "name": "{{ settings.site_name or 'OpenNav' }}",
-  {% if settings.site_subtitle %}"alternateName": "{{ settings.site_subtitle }}",{% endif %}
-  "url": "{{ url_for('main.index', _external=True)|clean_url }}",
-  {% if settings.site_description %}"description": "{{ settings.site_description }}",{% endif %}
-  "potentialAction": {
-    "@type": "SearchAction",
-    "target": {
-      "@type": "EntryPoint",
-      "urlTemplate": "{{ url_for('main.index', _external=True)|clean_url }}search?q={search_term_string}"
-    },
-    "query-input": "required name=search_term_string"
-  }
-}
-</script>
-{% endif %}
 
 <!-- 页面特定样式 -->
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -331,12 +282,8 @@
                 </div>
               </a>
               {% endfor %}
-              {# 主分类tab下显示主分类查看全部按钮 #}
-              {% set total_websites_count = category.total_count %}
-              {% for child in category.children %}
-              {% set total_websites_count = total_websites_count + child.total_count %}
-              {% endfor %}
-              {% if category.display_limit is defined and category.display_limit > 0 and total_websites_count > category.display_limit %}
+              {# 主分类tab下显示主分类查看全部按钮（后端已计算） #}
+              {% if category.show_view_all_in_all_tab %}
               <div class="w-100"></div> {# 强制换行 #}
               <div class="mt-4 text-center w-100">
                 <a href="{{ url_for('main.category', id=category.id) }}" class="btn btn-primary btn-sm px-4 py-2 view-all-btn" target="_blank">

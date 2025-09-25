@@ -88,6 +88,19 @@ def index():
                     Website.created_at.asc(),
                     Website.views.desc()
                 ).all()
+        
+        # 计算包含子分类在内的总数量，并提供“查看全部”标识
+        try:
+            total_with_children = category.total_count
+            for child in category.children:
+                # child.total_count 已在上面的循环中计算
+                total_with_children += getattr(child, 'total_count', 0)
+            category.total_with_children = total_with_children
+            display_limit = getattr(category, 'display_limit', 0) or 0
+            category.show_view_all_in_all_tab = bool(display_limit > 0 and total_with_children > display_limit)
+        except Exception:
+            category.total_with_children = category.total_count
+            category.show_view_all_in_all_tab = False
     
     # 获取站点设置
     settings = SiteSettings.get_settings()
