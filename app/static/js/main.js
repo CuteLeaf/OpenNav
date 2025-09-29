@@ -1,15 +1,15 @@
 // 等待文档加载完成
 document.addEventListener("DOMContentLoaded", function () {
   // 启用所有的提示工具，允许HTML（如需可改为html: false）
-  var tooltipTriggerList = [].slice.call(
-    document.querySelectorAll('[data-bs-toggle="tooltip"]')
-  );
-  var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-    return new bootstrap.Tooltip(tooltipTriggerEl, {
-      trigger: "hover",
-      html: true,
-    });
-  });
+  // var tooltipTriggerList = [].slice.call(
+  //   document.querySelectorAll('[data-bs-toggle="tooltip"]')
+  // );
+  // var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+  //   return new bootstrap.Tooltip(tooltipTriggerEl, {
+  //     trigger: "hover",
+  //     html: true,
+  //   });
+  // });
 
   // 添加导航栏滚动效果
   var navbar = document.querySelector(".navbar");

@@ -144,7 +144,7 @@
               {% if link.error_message %}
               <button
                 class="btn btn-sm btn-link p-0 ms-1"
-                data-bs-toggle="tooltip"
+            
                 title="{{ link.error_message }}"
               >
                 <i class="bi bi-info-circle"></i>
@@ -229,12 +229,12 @@
     const clearRecordsBtn = document.getElementById("clearRecordsBtn");
 
     // 初始化工具提示
-    var tooltipTriggerList = [].slice.call(
-      document.querySelectorAll('[data-bs-toggle="tooltip"]')
-    );
-    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-      return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
+    // var tooltipTriggerList = [].slice.call(
+    //   document.querySelectorAll('[data-bs-toggle="tooltip"]')
+    // );
+    // var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    //   return new bootstrap.Tooltip(tooltipTriggerEl);
+    // });
 
     // 全选/取消全选
     selectAllCheckbox.addEventListener("change", function () {

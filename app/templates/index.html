@@ -1,4 +1,4 @@
-{% extends "base.html" %} 
+{% extends "base.html" %}
 {% block head %}
 
 <!-- 页面特定样式 -->
@@ -16,20 +16,20 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/search.css') }}" />
 <link rel="stylesheet" href="{{ url_for('static', filename='css/modal.css') }}" />
 <link rel="stylesheet" href="{{ url_for('static', filename='css/contextMenu.css') }}" />
-{% endblock %} 
+{% endblock %}
 
-{# 定义图标渲染宏 #} 
-{% macro render_icon(icon_name='folder', color='#3498db') %} 
+{# 定义图标渲染宏 #}
+{% macro render_icon(icon_name='folder', color='#3498db') %}
 {% if icon_name.startswith('fa ') or icon_name.startswith('fas ') %}
 <i class="{{ icon_name }}" {% if color %}style="color: {{ color }}" {% endif %}></i>
 {% else %}
 <i class="bi bi-{{ icon_name }}" {% if color %}style="color: {{ color }}" {% endif %}></i>
-{% endif %} 
-{% endmacro %} 
+{% endif %}
+{% endmacro %}
 
-{% block page_type %}index{% endblock %} 
+{% block page_type %}index{% endblock %}
 
-{% block content %} 
+{% block content %}
 <!-- 添加隐藏的SEO内容 -->
 {% if settings %}
 <div style="display: none;">
@@ -168,12 +168,15 @@
         <a href="{% if settings.enable_transition %}{{ url_for('main.goto', website_id=website.id) }}{% else %}{{ url_for('main.site', id=website.id) }}{% endif %}"
           class="site-card" data-id="{{ website.id }}" data-website-id="{{ website.id }}"
           data-website-url="{{ website.url }}" data-sort="{{ website.sort_order|default(loop.index0*10) }}"
-          data-featured="{{ website.is_featured|lower }}"
-          target="_blank">
+          data-featured="{{ website.is_featured|lower }}" target="_blank">
           <div class="site-header">
             <span class="site-icon">
               {% if website.icon %}
-              <img src="{{ website.icon }}" alt="{{ website.title }}" />
+              <img src="{{ website.icon }}" alt="{{ website.title }}"
+                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+              <div class="default-site-icon" style="display: none">
+                {{ website.title|first|upper }}
+              </div>
               {% else %}
               <div class="default-site-icon">
                 {{ website.title|first|upper }}
@@ -258,8 +261,8 @@
               <a href="{% if settings.enable_transition %}{{ url_for('main.goto', website_id=website.id) }}{% else %}{{ url_for('main.site', id=website.id) }}{% endif %}"
                 class="site-card" data-id="{{ website.id }}" data-website-id="{{ website.id }}"
                 data-website-url="{{ website.url }}" data-sort="{{ website.sort_order|default(loop.index0*10) }}"
-                data-featured="{{ website.is_featured|lower }}"
-                title="{{ website.description }}" data-bs-toggle="tooltip" data-bs-placement="bottom" target="_blank">
+                data-featured="{{ website.is_featured|lower }}" title="{{ website.description }}"
+                 data-bs-placement="bottom" target="_blank">
                 {% if website.is_private %}
                 <div class="private-badge" title="私有链接">
                   <i class="bi bi-lock-fill"></i>
@@ -268,7 +271,11 @@
                 <div class="site-header">
                   <div class="site-icon">
                     {% if website.icon %}
-                    <img src="{{ website.icon }}" alt="{{ website.title }}" />
+                    <img src="{{ website.icon }}" alt="{{ website.title }}"
+                      onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                    <div class="default-site-icon" style="display: none">
+                      {{ website.title|first|upper }}
+                    </div>
                     {% else %}
                     <div class="default-site-icon">
                       {{ website.title|first|upper }}
@@ -286,7 +293,8 @@
               {% if category.show_view_all_in_all_tab %}
               <div class="w-100"></div> {# 强制换行 #}
               <div class="mt-4 text-center w-100">
-                <a href="{{ url_for('main.category', id=category.id) }}" class="btn btn-primary btn-sm px-4 py-2 view-all-btn" target="_blank">
+                <a href="{{ url_for('main.category', id=category.id) }}"
+                  class="btn btn-primary btn-sm px-4 py-2 view-all-btn" target="_blank">
                   查看全部 <i class="bi bi-arrow-right ms-1"></i>
                 </a>
               </div>
@@ -314,8 +322,8 @@
               <a href="{% if settings.enable_transition %}{{ url_for('main.goto', website_id=website.id) }}{% else %}{{ url_for('main.site', id=website.id) }}{% endif %}"
                 class="site-card" data-id="{{ website.id }}" data-website-id="{{ website.id }}"
                 data-website-url="{{ website.url }}" data-sort="{{ website.sort_order|default(loop.index0*10) }}"
-                data-featured="{{ website.is_featured|lower }}"
-                title="{{ website.description }}" data-bs-toggle="tooltip" data-bs-placement="bottom" target="_blank">
+                data-featured="{{ website.is_featured|lower }}" title="{{ website.description }}"
+                 data-bs-placement="bottom" target="_blank">
                 {% if website.is_private %}
                 <div class="private-badge" title="私有链接">
                   <i class="bi bi-lock-fill"></i>
@@ -324,7 +332,11 @@
                 <div class="site-header">
                   <div class="site-icon">
                     {% if website.icon %}
-                    <img src="{{ website.icon }}" alt="{{ website.title }}" />
+                    <img src="{{ website.icon }}" alt="{{ website.title }}"
+                      onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                    <div class="default-site-icon" style="display: none">
+                      {{ website.title|first|upper }}
+                    </div>
                     {% else %}
                     <div class="default-site-icon">
                       {{ website.title|first|upper }}
@@ -339,10 +351,12 @@
               </a>
               {% endfor %}
               {# 子分类tab下显示子分类查看全部按钮 #}
-              {% if child.display_limit is defined and child.display_limit > 0 and child.total_count > child.display_limit %}
+              {% if child.display_limit is defined and child.display_limit > 0 and child.total_count >
+              child.display_limit %}
               <div class="w-100"></div> {# 强制换行 #}
               <div class="mt-4 text-center w-100">
-                <a href="{{ url_for('main.category', id=child.id) }}" class="btn btn-primary btn-sm px-4 py-2 view-all-btn" target="_blank">
+                <a href="{{ url_for('main.category', id=child.id) }}"
+                  class="btn btn-primary btn-sm px-4 py-2 view-all-btn" target="_blank">
                   查看全部 <i class="bi bi-arrow-right ms-1"></i>
                 </a>
               </div>
@@ -372,8 +386,8 @@
           <a href="{% if settings.enable_transition %}{{ url_for('main.goto', website_id=website.id) }}{% else %}{{ url_for('main.site', id=website.id) }}{% endif %}"
             class="site-card" data-id="{{ website.id }}" data-website-id="{{ website.id }}"
             data-website-url="{{ website.url }}" data-sort="{{ website.sort_order|default(loop.index0*10) }}"
-            data-featured="{{ website.is_featured|lower }}"
-            title="{{ website.description }}" data-bs-toggle="tooltip" data-bs-placement="bottom" target="_blank">
+            data-featured="{{ website.is_featured|lower }}" title="{{ website.description }}" 
+            data-bs-placement="bottom" target="_blank">
             {% if website.is_private %}
             <div class="private-badge" title="私有链接">
               <i class="bi bi-lock-fill"></i>
@@ -382,7 +396,11 @@
             <div class="site-header">
               <div class="site-icon">
                 {% if website.icon %}
-                <img src="{{ website.icon }}" alt="{{ website.title }}" />
+                <img src="{{ website.icon }}" alt="{{ website.title }}"
+                  onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                <div class="default-site-icon" style="display: none">
+                  {{ website.title|first|upper }}
+                </div>
                 {% else %}
                 <div class="default-site-icon">
                   {{ website.title|first|upper }}
@@ -397,10 +415,12 @@
           </a>
           {% endfor %}
           {# 没有子分类的主分类显示查看全部按钮 #}
-          {% if category.display_limit is defined and category.display_limit > 0 and category.total_count > category.display_limit %}
+          {% if category.display_limit is defined and category.display_limit > 0 and category.total_count >
+          category.display_limit %}
           <div class="w-100"></div> {# 强制换行 #}
           <div class="mt-4 text-center w-100">
-            <a href="{{ url_for('main.category', id=category.id) }}" class="btn btn-primary btn-sm px-4 py-2 view-all-btn" target="_blank">
+            <a href="{{ url_for('main.category', id=category.id) }}"
+              class="btn btn-primary btn-sm px-4 py-2 view-all-btn" target="_blank">
               查看全部 <i class="bi bi-arrow-right ms-1"></i>
             </a>
           </div>
@@ -713,21 +733,21 @@
 {% endif %}
 
 <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    // 初始化所有Bootstrap tooltips
-    var tooltipTriggerList = [].slice.call(
-      document.querySelectorAll('[data-bs-toggle="tooltip"]')
-    );
-    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-      return new bootstrap.Tooltip(tooltipTriggerEl, {
-        placement: "bottom",
-        fallbackPlacements: ["top"],
-        trigger: "hover",
-      });
-    });
+  // document.addEventListener("DOMContentLoaded", function () {
+  //   // 初始化所有Bootstrap tooltips
+  //   var tooltipTriggerList = [].slice.call(
+  //     document.querySelectorAll('[data-bs-toggle="tooltip"]')
+  //   );
+  //   var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+  //     return new bootstrap.Tooltip(tooltipTriggerEl, {
+  //       placement: "bottom",
+  //       fallbackPlacements: ["top"],
+  //       trigger: "hover",
+  //     });
+  //   });
 
-    // 注意：图标错误处理已移至base.html全局处理
-  });
+  //   // 注意：图标错误处理已移至base.html全局处理
+  // });
   // 监听侧边栏子分类点击
   document.querySelectorAll('.sidebar-submenu-link[data-category-id][data-child-id]').forEach(function (link) {
     link.addEventListener('click', function (e) {

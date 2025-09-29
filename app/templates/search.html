@@ -9,6 +9,7 @@
     position: relative;
     overflow: hidden;
   }
+
   .search-header::before {
     content: "";
     position: absolute;
@@ -19,10 +20,12 @@
     background: url('{{ url_for("static", filename="images/pattern.svg") }}');
     opacity: 0.1;
   }
+
   .search-form {
     max-width: 600px;
     margin: 1rem auto 0;
   }
+
   .website-card {
     display: flex;
     align-items: center;
@@ -35,10 +38,13 @@
     text-decoration: none;
     color: #333;
   }
+
   .website-card:hover {
     transform: translateY(-3px);
-    box-shadow: none; /* 不要外发光 */
+    box-shadow: none;
+    /* 不要外发光 */
   }
+
   .website-icon {
     width: 60px;
     height: 60px;
@@ -50,26 +56,32 @@
     margin-right: 1.5rem;
     font-size: 1.75rem;
   }
+
   .website-icon img {
     max-width: 40px;
     max-height: 40px;
   }
+
   .website-info {
     flex: 1;
   }
+
   .website-title {
     font-size: 1.25rem;
     font-weight: 600;
     margin-bottom: 0.5rem;
   }
+
   .website-url {
     color: #6c757d;
     margin-bottom: 0.5rem;
     font-size: 0.875rem;
   }
+
   .website-description {
     color: #6c757d;
   }
+
   .category-badge {
     display: inline-flex;
     align-items: center;
@@ -80,6 +92,7 @@
     border-radius: 0.25rem;
     margin-left: 0.5rem;
   }
+
   .back-btn {
     margin-bottom: 1rem;
   }
@@ -99,11 +112,7 @@
         找到 {{ websites|length }} 个与
         <span class="search-keyword">"{{ query }}"</span> 相关的网站
       </p>
-      <form
-        class="search-form"
-        action="{{ url_for('main.search') }}"
-        method="get"
-      >
+      <form class="search-form" action="{{ url_for('main.search') }}" method="get">
         <div class="input-group">
           {{ form.query(class="form-control",
           placeholder="搜索网站名称或描述...") }}
@@ -122,14 +131,15 @@
     </div>
 
     {% for website in websites %}
-    <div
-      class="col-12 animate__animated animate__fadeIn"
-      style="animation-delay: {{ loop.index0 * 0.1 }}s"
-    >
+    <div class="col-12 animate__animated animate__fadeIn" style="animation-delay: {{ loop.index0 * 0.1 }}s">
       <a href="{{ url_for('main.site', id=website.id) }}" class="website-card">
         {% if website.icon %}
         <div class="website-icon">
-          <img src="{{ website.icon }}" alt="{{ website.title }}" />
+          <img src="{{ website.icon }}" alt="{{ website.title }}"
+            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+          <div class="default-site-icon" style="display: none">
+            {{ website.title|first|upper }}
+          </div>
         </div>
         {% else %}
         <div class="website-icon">
@@ -140,10 +150,7 @@
           <div class="d-flex align-items-center">
             <div class="website-title">{{ website.title }}</div>
             {% if website.category %}
-            <div
-              class="category-badge"
-              style="background-color: {{ website.category.color or '#3498db' }};"
-            >
+            <div class="category-badge" style="background-color: {{ website.category.color or '#3498db' }};">
               {% if website.category.icon %}
               <i class="bi bi-{{ website.category.icon }} me-1"></i>
               {% endif %} {{ website.category.name }}

@@ -1,26 +1,8 @@
 {# 定义图标渲染宏 #} {% macro render_icon(icon_name='folder', color='#3498db')
 %} {% if icon_name.startswith('fa ') or icon_name.startswith('fas ') %}
-<i
-  class="{{ icon_name }}"
-  {%
-  if
-  color
-  %}style="color: {{ color }}"
-  {%
-  endif
-  %}
-></i>
+<i class="{{ icon_name }}" {% if color %}style="color: {{ color }}" {% endif %}></i>
 {% else %}
-<i
-  class="bi bi-{{ icon_name }}"
-  {%
-  if
-  color
-  %}style="color: {{ color }}"
-  {%
-  endif
-  %}
-></i>
+<i class="bi bi-{{ icon_name }}" {% if color %}style="color: {{ color }}" {% endif %}></i>
 {% endif %} {% endmacro %} {% extends "base.html" %} {% block page_type
 %}category{% endblock %} {% block head %} {# 调试信息 #}
 <!-- 
@@ -32,44 +14,22 @@ DEBUG - Settings信息:
   Settings变量不可用
 {% endif %}
 -->
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='css/variables.css') }}"
-/>
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='css/layout.css') }}"
-/>
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='css/sidebar.css') }}"
-/>
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='css/sidebar_submenu.css') }}"
-/>
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='css/card.css') }}"
-/>
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='css/navbar.css') }}"
-/>
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='css/contextMenu.css') }}"
-/>
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='css/modal.css') }}"
-/>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/variables.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/layout.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar_submenu.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/card.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/contextMenu.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/modal.css') }}" />
 <style>
   .page-container {
     padding: 0;
     margin-top: 0;
-    margin-left: 0; /* 移除左侧边距 */
-    width: 100%; /* 确保占据整个宽度 */
+    margin-left: 0;
+    /* 移除左侧边距 */
+    width: 100%;
+    /* 确保占据整个宽度 */
   }
 
   .content-container {
@@ -398,18 +358,14 @@ DEBUG - Settings信息:
     <div class="sidebar-group">
       <ul class="sidebar-menu">
         {% for category in categories %} {% if category.parent_id is none %}
-        <li
-          class="sidebar-menu-item {% if category.children.count() > 0 %}has-submenu{% endif %}"
-        >
+        <li class="sidebar-menu-item {% if category.children.count() > 0 %}has-submenu{% endif %}">
           <a href="{{ url_for('main.category', id=category.id) }}" class="sidebar-menu-link">
             <span class="sidebar-menu-icon">
               {{ render_icon(category.icon or 'folder', category.color or
               '#3498db') }}
             </span>
             {{ category.name }} {% if category.children.count() > 0 %}
-            <span class="category-children-count"
-              >{{ category.children.count() }}</span
-            >
+            <span class="category-children-count">{{ category.children.count() }}</span>
             <button class="submenu-toggle" tabindex="-1" aria-label="展开/收起">
               <svg viewBox="0 0 24 24">
                 <polyline points="6 9 12 15 18 9" />
@@ -421,10 +377,7 @@ DEBUG - Settings信息:
           <ul class="sidebar-submenu">
             {% for child in category.children %}
             <li class="sidebar-submenu-item">
-              <a
-                href="{{ url_for('main.category', id=child.id) }}"
-                class="sidebar-submenu-link"
-              >
+              <a href="{{ url_for('main.category', id=child.id) }}" class="sidebar-submenu-link">
                 <span class="sidebar-menu-icon">
                   {{ render_icon(child.icon or 'folder', child.color or
                   '#3498db') }}
@@ -448,10 +401,7 @@ DEBUG - Settings信息:
     <!-- 分类信息和搜索区域 -->
     <div class="category-card">
       <div class="category-info">
-        <div
-          class="category-icon"
-          style="background: {{ category.color or 'var(--primary-gradient)' }}"
-        >
+        <div class="category-icon" style="background: {{ category.color or 'var(--primary-gradient)' }}">
           {{ render_icon(category.icon or 'folder', '#ffffff') }}
         </div>
         <div class="category-details">
@@ -467,24 +417,12 @@ DEBUG - Settings信息:
       </div>
       <div class="category-search">
         <div class="search-input-group">
-          <input
-            type="search"
-            id="categorySearchInput"
-            class="category-search-input"
-            placeholder="搜索{{ category.name }}分类内网站..."
-          />
-          <button
-            type="button"
-            class="category-search-button"
-            id="searchButton"
-          >
+          <input type="search" id="categorySearchInput" class="category-search-input"
+            placeholder="搜索{{ category.name }}分类内网站..." />
+          <button type="button" class="category-search-button" id="searchButton">
             <i class="bi bi-search"></i>
           </button>
-          <button
-            type="button"
-            id="clearCategorySearch"
-            class="search-clear-button"
-          >
+          <button type="button" id="clearCategorySearch" class="search-clear-button">
             <i class="bi bi-x"></i>
           </button>
         </div>
@@ -497,34 +435,20 @@ DEBUG - Settings信息:
         找到 <span id="searchCount"></span> 个与
         <span id="searchKeyword"></span> 相关的网站
       </div>
-      <button
-        type="button"
-        id="clearSearchBtn"
-        class="btn btn-sm btn-outline-primary"
-      >
+      <button type="button" id="clearSearchBtn" class="btn btn-sm btn-outline-primary">
         <i class="bi bi-arrow-left me-1"></i>返回全部
       </button>
     </div>
 
     <!-- 网站卡片容器 -->
-    <div
-      class="card-container {% if current_user.is_authenticated and current_user.is_admin %}draggable{% endif %}"
-      data-category-id="{{ category.id }}"
-      id="sitesContainer"
-    >
+    <div class="card-container {% if current_user.is_authenticated and current_user.is_admin %}draggable{% endif %}"
+      data-category-id="{{ category.id }}" id="sitesContainer">
       {% for website in websites %}
-      <a
-        href="{% if settings.enable_transition %}{{ url_for('main.goto', website_id=website.id) }}{% else %}{{ url_for('main.site', id=website.id) }}{% endif %}"
+      <a href="{% if settings.enable_transition %}{{ url_for('main.goto', website_id=website.id) }}{% else %}{{ url_for('main.site', id=website.id) }}{% endif %}"
         class="site-card {% if current_user.is_authenticated and current_user.is_admin %}draggable{% endif %}"
-        data-id="{{ website.id }}"
-        data-website-id="{{ website.id }}"
-        data-description="{{ website.description }}"
-        data-sort="{{ website.sort_order|default(loop.index0*10) }}"
-        title="{{ website.description }}"
-        data-bs-toggle="tooltip"
-        data-bs-placement="bottom"
-        target="_blank"
-      >
+        data-id="{{ website.id }}" data-website-id="{{ website.id }}" data-description="{{ website.description }}"
+        data-sort="{{ website.sort_order|default(loop.index0*10) }}" title="{{ website.description }}"
+         data-bs-placement="bottom" target="_blank">
         {% if website.is_private %}
         <div class="private-badge" title="私有链接">
           <i class="bi bi-lock-fill"></i>
@@ -538,12 +462,14 @@ DEBUG - Settings信息:
         <div class="site-header">
           <div class="site-icon">
             {% if website.icon %}
-            <img src="{{ website.icon }}" alt="{{ website.title }}" />
+            <img src="{{ website.icon }}" alt="{{ website.title }}"
+              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+            <div class="default-site-icon" style="display:none;">
+              {{ website.title|first|upper }}
+            </div>
             {% else %}
             <div class="default-site-icon">
-              <script>
-                document.write("{{ website.title }}".charAt(0).toUpperCase());
-              </script>
+              {{ website.title|first|upper }}
             </div>
             {% endif %}
           </div>
@@ -559,10 +485,7 @@ DEBUG - Settings信息:
           <i class="bi bi-emoji-frown fs-1"></i>
           <p class="mt-3">该分类下还没有网站</p>
           {% if current_user.is_authenticated and current_user.is_admin %}
-          <a
-            href="{{ url_for('admin.add_website') }}"
-            class="btn btn-primary mt-2"
-          >
+          <a href="{{ url_for('admin.add_website') }}" class="btn btn-primary mt-2">
             <i class="bi bi-plus-circle me-1"></i> 添加网站
           </a>
           {% endif %}
@@ -614,9 +537,7 @@ DEBUG - Settings信息:
           </div>
 
           <div class="col-md-12">
-            <label class="form-label"
-              >所属分类 <span class="text-danger">*</span></label
-            >
+            <label class="form-label">所属分类 <span class="text-danger">*</span></label>
             <div class="category-select-container">
               <select id="editCategory" class="form-select" required>
                 <option value="">请选择分类</option>
@@ -636,12 +557,7 @@ DEBUG - Settings信息:
             <label class="form-label">链接地址</label>
             <div class="input-group">
               <input type="url" id="editUrl" class="form-control" required />
-              <button
-                type="button"
-                id="fetchInfo"
-                class="btn btn-outline-secondary"
-                title="获取网站信息"
-              >
+              <button type="button" id="fetchInfo" class="btn btn-outline-secondary" title="获取网站信息">
                 <i class="bi bi-cloud-download"></i>
               </button>
             </div>
@@ -650,39 +566,21 @@ DEBUG - Settings信息:
           <div class="col-md-12">
             <label class="form-label">网站图标</label>
             <div class="input-group">
-              <span
-                class="input-group-text p-0 border-0 bg-transparent"
-                style="width: 32px"
-              >
-                <img
-                  id="editIconPreview"
-                  src=""
-                  alt=""
-                  style="
+              <span class="input-group-text p-0 border-0 bg-transparent" style="width: 32px">
+                <img id="editIconPreview" src="" alt="" style="
                     width: 24px;
                     height: 24px;
                     object-fit: contain;
                     display: none;
-                  "
-                />
+                  " />
               </span>
-              <input
-                type="url"
-                id="editIcon"
-                class="form-control"
-                placeholder="图标URL（自动获取）"
-              />
+              <input type="url" id="editIcon" class="form-control" placeholder="图标URL（自动获取）" />
             </div>
           </div>
 
           <div class="col-md-12">
             <label class="form-label">网站描述</label>
-            <textarea
-              id="editDescription"
-              class="form-control"
-              rows="1"
-              placeholder="简要描述网站内容和功能"
-            ></textarea>
+            <textarea id="editDescription" class="form-control" rows="1" placeholder="简要描述网站内容和功能"></textarea>
           </div>
 
           <div class="col-md-12">
@@ -691,26 +589,13 @@ DEBUG - Settings信息:
                 <label class="form-label">访问权限</label>
                 <div class="d-flex gap-3">
                   <div class="form-check">
-                    <input
-                      class="form-check-input"
-                      type="radio"
-                      name="editPrivacy"
-                      id="editPublic"
-                      value="0"
-                      checked
-                    />
+                    <input class="form-check-input" type="radio" name="editPrivacy" id="editPublic" value="0" checked />
                     <label class="form-check-label" for="editPublic">
                       <i class="bi bi-globe"></i> 公开
                     </label>
                   </div>
                   <div class="form-check">
-                    <input
-                      class="form-check-input"
-                      type="radio"
-                      name="editPrivacy"
-                      id="editPrivate"
-                      value="1"
-                    />
+                    <input class="form-check-input" type="radio" name="editPrivacy" id="editPrivate" value="1" />
                     <label class="form-check-label" for="editPrivate">
                       <i class="bi bi-lock"></i> 私有
                     </label>
@@ -719,16 +604,8 @@ DEBUG - Settings信息:
               </div>
               <div class="col-md-6">
                 <label class="form-label">排序权重</label>
-                <input
-                  type="number"
-                  id="editWeight"
-                  class="form-control form-control-sm"
-                  min="0"
-                  max="9999"
-                  value="0"
-                  placeholder="值越大排序越靠前"
-                  title="值越大排序越靠前，默认为0"
-                />
+                <input type="number" id="editWeight" class="form-control form-control-sm" min="0" max="9999" value="0"
+                  placeholder="值越大排序越靠前" title="值越大排序越靠前，默认为0" />
               </div>
             </div>
           </div>
@@ -751,10 +628,7 @@ DEBUG - Settings信息:
 {# 重复链接提醒对话框 #}
 <div class="modal-overlay" id="duplicateLinkModal" style="display: none">
   <div class="edit-modal">
-    <div
-      class="modal-header"
-      style="background: linear-gradient(to right, #ff9800, #f44336)"
-    >
+    <div class="modal-header" style="background: linear-gradient(to right, #ff9800, #f44336)">
       <h5><i class="bi bi-exclamation-triangle me-2"></i>链接已存在</h5>
       <button class="modal-close" id="closeDuplicateModal">
         <i class="bi bi-x"></i>
@@ -794,11 +668,7 @@ DEBUG - Settings信息:
       <button type="button" class="btn btn-warning" id="addDuplicateLink">
         <i class="bi bi-plus-circle me-1"></i>仍然添加
       </button>
-      <button
-        type="button"
-        class="btn btn-outline-secondary"
-        id="cancelDuplicateAdd"
-      >
+      <button type="button" class="btn btn-outline-secondary" id="cancelDuplicateAdd">
         取消
       </button>
     </div>
@@ -903,9 +773,8 @@ DEBUG - Settings信息:
           if (data.success) {
             displaySearchResults(data);
           } else {
-            sitesContainer.innerHTML = `<div class="text-center py-5 text-muted"><i class="bi bi-exclamation-circle fs-1"></i><p class="mt-3">${
-              data.message || "搜索失败"
-            }</p></div>`;
+            sitesContainer.innerHTML = `<div class="text-center py-5 text-muted"><i class="bi bi-exclamation-circle fs-1"></i><p class="mt-3">${data.message || "搜索失败"
+              }</p></div>`;
           }
         })
         .catch((error) => {
@@ -998,7 +867,11 @@ DEBUG - Settings信息:
       const siteIcon = document.createElement("div");
       siteIcon.className = "site-icon";
       if (website.icon) {
-        siteIcon.innerHTML = `<img src="${website.icon}" alt="${website.title}" />`;
+        siteIcon.innerHTML = `
+          <img src="${website.icon}" alt="${website.title}" 
+               onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+          <div class="default-site-icon" style="display: none;">${website.title.charAt(0).toUpperCase()}</div>
+        `;
       } else {
         const defaultIcon = document.createElement("div");
         defaultIcon.className = "default-site-icon";
@@ -1030,27 +903,27 @@ DEBUG - Settings信息:
     }
 
     // 重新绑定卡片事件
-    function rebindCardEvents() {
-      // 初始化工具提示
-      if (typeof bootstrap !== "undefined") {
-        const tooltipTriggerList = [].slice.call(
-          document.querySelectorAll('[data-bs-toggle="tooltip"]')
-        );
-        tooltipTriggerList.map(function (tooltipTriggerEl) {
-          return new bootstrap.Tooltip(tooltipTriggerEl, {
-            trigger: "hover",
-          });
-        });
-      }
+    // function rebindCardEvents() {
+    //   // 初始化工具提示
+    //   if (typeof bootstrap !== "undefined") {
+    //     const tooltipTriggerList = [].slice.call(
+    //       document.querySelectorAll('[data-bs-toggle="tooltip"]')
+    //     );
+    //     tooltipTriggerList.map(function (tooltipTriggerEl) {
+    //       return new bootstrap.Tooltip(tooltipTriggerEl, {
+    //         trigger: "hover",
+    //       });
+    //     });
+    //   }
 
-      // 如果有拖拽功能，重新初始化
-      if (
-        typeof enableDragSort === "function" &&
-        document.querySelector(".card-container.draggable")
-      ) {
-        enableDragSort(document.querySelector(".card-container.draggable"));
-      }
-    }
+    //   // 如果有拖拽功能，重新初始化
+    //   if (
+    //     typeof enableDragSort === "function" &&
+    //     document.querySelector(".card-container.draggable")
+    //   ) {
+    //     enableDragSort(document.querySelector(".card-container.draggable"));
+    //   }
+    // }
 
     // 恢复原始内容
     function restoreOriginalContent() {

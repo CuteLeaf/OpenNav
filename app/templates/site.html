@@ -145,7 +145,14 @@
       <div class="col-auto">
         {% if website.icon %}
         <div class="site-icon">
-          <img src="{{ website.icon }}" alt="{{ website.title }}" />
+                <img
+                  src="{{ website.icon }}"
+                  alt="{{ website.title }}"
+                  onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                />
+                <div class="default-site-icon" style="display: none">
+                  {{ website.title|first|upper }}
+                </div>
         </div>
         {% else %}
         <div class="site-icon">
